@@ -1,6 +1,6 @@
 import { createContext, useState } from "react";
 import logo from "/logosphere.png";
-import logoSecondary from "/logosphere.svg";
+import logoSecondary from "/logosphere.png";
 import kannel from "/sphere.png";
 import kannelSecondary from "/sphere.png";
 
