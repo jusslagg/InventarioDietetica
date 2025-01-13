@@ -2,7 +2,7 @@ import CartWidget from "../../common/cartWidget/CartWidget";
 import ThemeController from "../../common/themeController/ThemeController";
 import { Link } from "react-router-dom";
 import { categories } from "./categories";
-import { LogoContext } from "../../../context/LogoContext.jsx";
+import { LogoContext } from "../../../context/LogoContext";
 import { useContext, useState } from "react";
 
 const Navbar = () => {
