@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ItemListContainer from "./components/pages/itemListComponents/ItemListContainer";
 import Navbar from "./components/Layouts/navbar/Navbar";
-import Footer from "./components/layouts/footer/Footer";
 import CartContainer from "./components/pages/cart/CartContainer";
 import ItemDetailContainer from "./components/pages/itemDetail/ItemDetailContainer";
 import Page404 from "./components/pages/404/Page404";
+import Footer from "./components/layouts/footer/Footer";
 import { CartContextProvider } from "./context/CartContext";
 import { LogoContextProvider } from "./context/LogoContext";
 import { AlertProvider } from "./context/AlertContext";

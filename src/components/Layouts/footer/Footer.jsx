@@ -1,42 +1,41 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ItemListContainer from "./components/pages/itemListComponents/ItemListContainer";
-import Navbar from "./components/Layouts/navbar/Navbar";
-import Footer from "./components/layouts/footer/Footer";
-import CartContainer from "./components/pages/cart/CartContainer";
-import ItemDetailContainer from "./components/pages/itemDetail/ItemDetailContainer";
-import Page404 from "./components/pages/404/Page404";
-import { CartContextProvider } from "./context/CartContext";
-import { LogoContextProvider } from "./context/LogoContext";
-import { AlertProvider } from "./context/AlertContext";
-import Checkout from "./components/pages/checkout/Checkout";
+import React from "react";
+import instagram from "/logoInstagram.svg";
+import whatsapp from "/logoWhatsapp.svg";
+import googleMaps from "/logoGoogleMaps.svg";
+import { LogoContext } from "../../../context/LogoContext";
+import { useContext } from "react";
 
-function App() {
+const Footer = () => {
+  const { currentLogo } = useContext(LogoContext);
   return (
-    <BrowserRouter>
-      <AlertProvider>
-        <CartContextProvider>
-          <LogoContextProvider>
-            <Navbar />
-            <Routes>
-              <Route path={"/"} element={<ItemListContainer />} />
-              <Route
-                path={"/Category/:categoryName"}
-                element={<ItemListContainer />}
-              />
-              <Route
-                path={"/ProductDetail/:id"}
-                element={<ItemDetailContainer />}
-              />
-              <Route path={"/Cart"} element={<CartContainer />} />
-              <Route path={"*"} element={<Page404 />} />
-              <Route path={"/checkout"} element={<Checkout />} />
-            </Routes>
-            <Footer />
-          </LogoContextProvider>
-        </CartContextProvider>
-      </AlertProvider>
-    </BrowserRouter>
+    <footer className="footer footer-center bg-base-300 p-10">
+      <aside>
+        <img src={currentLogo} alt="logosphere" className="w-20" />
+        <p className="font-bold text-base-content">Granola Power fit</p>
+        <p className="text-base-content">
+          Copyright © {new Date().getFullYear()} - Todos los derechos reservados
+        </p>
+      </aside>
+      <nav>
+        <div className="grid grid-flow-col gap-4">
+          <button className="btn btn-ghost p-0">
+            <a href="https://www.instagram.com/jusslagg/" target="_blank">
+              <img src={instagram} alt="Instagram" />
+            </a>
+          </button>
+          <button className="btn btn-ghost p-0">
+            <a>
+              <img src={whatsapp} alt="Instagram" />
+            </a>
+          </button>
+          <button className="btn btn-ghost p-0">
+            <a href="https://maps.app.goo.gl/CXUXnpQyqiLMgyqc9" target="blank">
+              <img src={googleMaps} alt="Instagram" />
+            </a>
+          </button>
+        </div>
+      </nav>
+    </footer>
   );
-}
-
-export default App;
+};
+export default Footer;
