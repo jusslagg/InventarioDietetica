@@ -11,7 +11,6 @@ const CounterContainer = ({
   const [contador, setContador] = useState(totalAdded);
   const [disabledSumar, setDisabledSumar] = useState(false);
   const [disabledRestar, setDisabledRestar] = useState(true);
-  const [grams, setGrams] = useState(100); // Definir la cantidad en gramos por defecto
 
   // Verificar si el producto es de una categoría de tipo "frutos secos" o "harinas"
   const isCategoryRelevant =
@@ -21,16 +20,16 @@ const CounterContainer = ({
   const pricePerKilo = unitPrice; // Por ejemplo, 5800 por kilo
   const pricePerGram = pricePerKilo / 1000; // Precio por gramo
 
-  // Calcular el precio en función de los gramos
-  const calculatePrice = (grams) => {
+  // Calcular el precio en función de la cantidad
+  const calculatePrice = (contador) => {
     if (isCategoryRelevant) {
-      return (grams * pricePerGram).toFixed(2); // Calculamos el precio en base a gramos si es relevante
+      return (contador * pricePerGram).toFixed(2); // Calculamos el precio en base a la cantidad si es relevante
     } else {
       return (unitPrice * contador).toFixed(2); // Si no es relevante, se mantiene el precio original
     }
   };
 
-  // Sumar la cantidad en gramos
+  // Sumar la cantidad
   const sumar = () => {
     if (contador < stock) {
       setContador(contador + 1);
@@ -41,7 +40,7 @@ const CounterContainer = ({
     }
   };
 
-  // Restar la cantidad en gramos
+  // Restar la cantidad
   const restar = () => {
     if (contador > 1) {
       setContador(contador - 1);
@@ -52,7 +51,15 @@ const CounterContainer = ({
     }
   };
 
-  // Pasar el total de gramos y el precio calculado al componente hijo
+  // Manejar el cambio manual en el input de cantidad
+  const handleChangeCantidad = (value) => {
+    const cantidad = Math.max(1, Math.min(parseInt(value), stock)); // Asegurarse de que la cantidad esté entre 1 y el stock
+    setContador(cantidad);
+    setDisabledRestar(cantidad === 1);
+    setDisabledSumar(cantidad === stock);
+  };
+
+  // Pasar solo las propiedades relevantes al componente hijo
   let childProps = {
     contador,
     sumar,
@@ -60,9 +67,8 @@ const CounterContainer = ({
     addOn,
     disabledSumar,
     disabledRestar,
-    grams,
-    setGrams, // Permitir que el usuario ingrese la cantidad en gramos
-    calculatePrice,
+    calculatePrice, // No pasamos más gramos, solo el cálculo con la cantidad
+    handleChangeCantidad, // Pasamos la función para el cambio manual
   };
 
   return <Counter {...childProps} />;

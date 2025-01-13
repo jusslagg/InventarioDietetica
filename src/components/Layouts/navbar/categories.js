@@ -10,7 +10,7 @@ export const categories = [
   { title: "Cereal", path: "/Category/Cereal" },
   { title: "Chocolate", path: "/Category/Chocolate" },
   { title: "Condimento", path: "/Category/Condimento" },
-  { title: "Dulce de leche", path: "/Category/Dulce-de-leche" },
+  { title: "Dulce de leche", path: "/Category/Dulce de leche" },
   { title: "Fideos", path: "/Category/Fideos" },
   { title: "Fruto secos", path: "/Category/Fruto secos" },
   { title: "Galletas", path: "/Category/Galletas" },

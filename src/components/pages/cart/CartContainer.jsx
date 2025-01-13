@@ -13,6 +13,10 @@ const CartContainer = () => {
   } = useContext(CartContext);
 
   const [discount, setDiscount] = useState(0); // Estado para el descuento
+  const [contador, setContador] = useState(1); // Contador de unidades
+  const [grams, setGrams] = useState(0); // Gramos del producto
+
+  const pricePerKg = 5000; // Precio por kilogramo (ejemplo)
 
   // Función para calcular el total con descuento
   const calculateTotalWithDiscount = () => {
@@ -21,17 +25,20 @@ const CartContainer = () => {
 
   const totalWithDiscount = calculateTotalWithDiscount();
 
-  // Función para agregar el producto al carrito
-  const handleAddProductToCart = (contador, grams) => {
-    const pricePerKg = 5000; // Supón que el precio por kilogramo es 5000
+  // Manejar el cambio en el select de descuento
+  const handleDiscountChange = (event) => {
+    setDiscount(parseInt(event.target.value));
+  };
 
+  // Función para agregar el producto al carrito
+  const handleAddProductToCart = () => {
     // Si se está agregando por gramos
     if (grams > 0) {
       const pricePerGram = pricePerKg / 1000; // Precio por gramo
       const priceInGrams = pricePerGram * grams;
       const productWithGrams = {
-        id: 1,
-        title: "Producto",
+        id: Date.now(), // Usamos un ID único temporal
+        title: "Producto", // Nombre del producto
         quantity: grams, // Se usa gramos como cantidad
         price: priceInGrams, // Precio calculado en gramos
         grams: grams, // Guardamos los gramos
@@ -40,19 +47,14 @@ const CartContainer = () => {
     } else {
       // Si se está agregando por unidades
       const productWithUnits = {
-        id: 1,
-        title: "Producto",
+        id: Date.now(), // Usamos un ID único temporal
+        title: "Producto", // Nombre del producto
         quantity: contador, // Se usa la cantidad de unidades
         price: pricePerKg, // Precio sin cambiar
         grams: 0, // No se usan gramos
       };
       addProductToCart(productWithUnits);
     }
-  };
-
-  // Manejar el cambio en el select de descuento
-  const handleDiscountChange = (event) => {
-    setDiscount(parseInt(event.target.value));
   };
 
   return (
@@ -65,6 +67,8 @@ const CartContainer = () => {
       discount={discount} // Descuento seleccionado
       handleDiscountChange={handleDiscountChange}
       handleAddProductToCart={handleAddProductToCart} // Pasamos la función aquí
+      setGrams={setGrams}
+      setContador={setContador}
     />
   );
 };

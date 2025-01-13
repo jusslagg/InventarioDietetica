@@ -5,24 +5,15 @@ const Counter = ({
   addOn,
   disabledSumar,
   disabledRestar,
-  grams,
-  setGrams,
   calculatePrice,
   productType, // Tipo de producto (condimento, fruto seco, harina, etc.)
   pricePerKg, // Precio por kilogramo
+  handleChangeCantidad, // Función para manejar el cambio manual en la cantidad
 }) => {
-  // Función para calcular el precio en base a los gramos
-  const calculatePricePerGram = (grams) => {
-    if (
-      productType === "condimento" ||
-      productType === "fruto seco" ||
-      productType === "harina"
-    ) {
-      // Convertimos el precio de kg a gramo
-      const pricePerGram = pricePerKg / 1000; // Precio por gramo
-      return pricePerGram * grams; // Calculamos el precio según los gramos
-    }
-    return pricePerKg * contador; // Si no es de los productos especiales, utilizamos el precio normal
+  // Función para calcular el precio en base a la cantidad
+  const calculatePricePerUnit = (contador) => {
+    const pricePerGram = pricePerKg / 1000; // Precio por gramo
+    return pricePerGram * contador; // Calculamos el precio según la cantidad
   };
 
   return (
@@ -34,7 +25,15 @@ const Counter = ({
       >
         <p className="font-bold text-xl">-</p>
       </button>
-      <h2 className="text-xl px-3">Cantidad: {contador}</h2>
+
+      <input
+        type="number"
+        value={contador}
+        onChange={(e) => handleChangeCantidad(e.target.value)}
+        className="text-xl text-center px-3 w-16"
+        min="1"
+      />
+
       <button
         className="btn btn-success"
         onClick={sumar}
@@ -43,26 +42,10 @@ const Counter = ({
         <p className="font-bold text-xl">+</p>
       </button>
 
-      {/* Campo para ingresar gramos */}
-      <div>
-        <label className="font-semibold">Cantidad en gramos:</label>
-        <input
-          type="number"
-          className="input input-bordered w-full max-w-xs"
-          value={grams}
-          onChange={(e) => setGrams(parseInt(e.target.value))}
-        />
-      </div>
-
-      {/* Mostrar el precio calculado */}
-      <h3 className="font-semibold mt-3">
-        Precio por {grams} gramos: ${calculatePricePerGram(grams)}
-      </h3>
-
       <div>
         <button
           className="btn btn-primary ml-2 px-8"
-          onClick={() => addOn(contador, grams)} // Pasar los gramos y cantidad al agregar al carrito
+          onClick={() => addOn(contador)} // Pasar solo la cantidad al agregar al carrito
         >
           Agregar al carrito
         </button>
