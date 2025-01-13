@@ -1,7 +1,4 @@
 import React from "react";
-import instagram from "/logoInstagram.svg";
-import whatsapp from "/logoWhatsapp.svg";
-import googleMaps from "/logoGoogleMaps.svg";
 import { LogoContext } from "../../../context/LogoContext";
 import { useContext } from "react";
 
@@ -15,27 +12,17 @@ const Footer = () => {
         <p className="text-base-content">
           Copyright © {new Date().getFullYear()} - Todos los derechos reservados
         </p>
+        {/* Aquí agregamos el texto de "Hecho con amor" con el corazón */}
+        <p className="text-base-content mt-4">
+          Hecho con{" "}
+          <span role="img" aria-label="heart">
+            💖
+          </span>{" "}
+          por Jesús Gil
+        </p>
       </aside>
-      <nav>
-        <div className="grid grid-flow-col gap-4">
-          <button className="btn btn-ghost p-0">
-            <a href="https://www.instagram.com/jusslagg/" target="_blank">
-              <img src={instagram} alt="Instagram" />
-            </a>
-          </button>
-          <button className="btn btn-ghost p-0">
-            <a>
-              <img src={whatsapp} alt="Instagram" />
-            </a>
-          </button>
-          <button className="btn btn-ghost p-0">
-            <a href="https://maps.app.goo.gl/CXUXnpQyqiLMgyqc9" target="blank">
-              <img src={googleMaps} alt="Instagram" />
-            </a>
-          </button>
-        </div>
-      </nav>
     </footer>
   );
 };
+
 export default Footer;
