@@ -1,5 +1,5 @@
-import ProductCard from "../../common/productCard/ProductCard"; // Verifica la ruta
-import SkeletonCard from "../../common/skeletonCard/SkeletonCard"; // Verifica la ruta
+import ProductCard from "../../common/productCard/ProductCard";
+import SkeletonCard from "../../common/skeletonCard/SkeletonCard";
 export const ItemList = ({ items }) => {
   // if con return temprano
   // ternario

@@ -24,10 +24,11 @@ const Navbar = () => {
 
   return (
     <div className="navbar bg-base-100 shadow-md">
-      {/* Inicio del Navbar */}
-      <div className="navbar-start">
-        <Link to="/" className="text-xl font-bold">
-          {currentLogo || "Mi Logo"}
+      {/* Inicio del Navbar: Logo */}
+      <div className="navbar-start flex items-center space-x-4">
+        <Link to="/" className="flex flex-col items-center text-center">
+          <img src={currentLogo} alt="logosphere" className="w-40" />
+          <p className="font-bold text-base-content">GRANOLA POWERFIT</p>
         </Link>
       </div>
 

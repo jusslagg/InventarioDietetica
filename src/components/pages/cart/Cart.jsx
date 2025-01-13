@@ -1,9 +1,24 @@
 import { LogoContext } from "../../../context/LogoContext.jsx";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 
 const Cart = ({ cart, deleteProductById, totalQuantity, total, clearCart }) => {
   const { currentKannel } = useContext(LogoContext);
+
+  // Estado para manejar el descuento seleccionado
+  const [discount, setDiscount] = useState(0);
+
+  // Función para calcular el total con descuento
+  const calculateTotalWithDiscount = () => {
+    return total - (total * discount) / 100;
+  };
+
+  // Manejar el cambio en el select de descuento
+  const handleDiscountChange = (event) => {
+    setDiscount(parseInt(event.target.value));
+  };
+
+  const totalWithDiscount = calculateTotalWithDiscount();
 
   return (
     <div className="mx-auto my-3">
@@ -22,11 +37,30 @@ const Cart = ({ cart, deleteProductById, totalQuantity, total, clearCart }) => {
                 Vaciar Carrito
               </button>
             </div>
+
+            {/* Selector de descuento */}
+            <div className="mb-3">
+              <label className="font-semibold mb-2">
+                Selecciona un descuento:
+              </label>
+              <select
+                className="select select-bordered w-full max-w-xs"
+                value={discount}
+                onChange={handleDiscountChange}
+              >
+                <option value={0}>Ninguno</option>
+                <option value={10}>10%</option>
+                <option value={20}>20%</option>
+                <option value={50}>50%</option>
+                <option value={80}>80%</option>
+              </select>
+            </div>
+
             <h2 className="lg:text-2xl font-semibold mb-3 text-center">
               Total de productos: {totalQuantity}
             </h2>
             <h2 className="lg:text-2xl font-semibold mb-3 text-center">
-              Total a pagar: ${total}
+              Total a pagar: ${totalWithDiscount.toFixed(2)}
             </h2>
           </div>
 
@@ -81,7 +115,7 @@ const Cart = ({ cart, deleteProductById, totalQuantity, total, clearCart }) => {
           </div>
           <div>
             <h2 className="lg:text-2xl font-semibold mb-3">
-              Dile a Sphere que quieres volver
+              Toca a Granol para buscar productos
             </h2>
           </div>
         </div>

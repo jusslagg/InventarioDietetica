@@ -5,6 +5,9 @@ const Counter = ({
   addOn,
   disabledSumar,
   disabledRestar,
+  grams,
+  setGrams,
+  calculatePrice,
 }) => {
   return (
     <div className="flex flex-row items-center">
@@ -23,10 +26,27 @@ const Counter = ({
       >
         <p className="font-bold text-xl">+</p>
       </button>
+
+      {/* Campo para ingresar gramos */}
+      <div>
+        <label className="font-semibold">Cantidad en gramos:</label>
+        <input
+          type="number"
+          className="input input-bordered w-full max-w-xs"
+          value={grams}
+          onChange={(e) => setGrams(parseInt(e.target.value))}
+        />
+      </div>
+
+      {/* Mostrar el precio calculado */}
+      <h3 className="font-semibold mt-3">
+        Precio por {grams} gramos: ${calculatePrice(grams)}
+      </h3>
+
       <div>
         <button
           className="btn btn-primary ml-2 px-8"
-          onClick={() => addOn(contador)}
+          onClick={() => addOn(contador, grams)} // Pasar los gramos y cantidad al agregar al carrito
         >
           Agregar al carrito
         </button>
