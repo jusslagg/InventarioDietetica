@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
 import { ItemList } from "./ItemList";
 import { useParams } from "react-router-dom";
-import {
-  addDoc,
-  collection,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../../configFirebase";
-import { products } from "../../../products";
+import { products } from "../../../products"; // Suponiendo que los productos están en un archivo 'products.js'
 
 const ItemListContainer = () => {
   const [items, setItems] = useState([]);
@@ -32,6 +24,7 @@ const ItemListContainer = () => {
       consulta = query(itemsCollection, where("category", "==", categoryName));
     }
 
+    // Cargar productos de Firebase
     getDocs(consulta).then((snapshot) => {
       const fetchedItems = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -41,17 +34,51 @@ const ItemListContainer = () => {
     });
   }, [categoryName]);
 
-  // Verificar si un producto ya existe en Firebase
-  const checkIfProductExists = (newProductTitle) => {
-    return items.some((item) => item.title === newProductTitle);
+  // Función para agregar productos desde el archivo products.js
+  const agregarProductosDesdeFile = async () => {
+    try {
+      // Recorremos todos los productos del archivo products.js
+      for (const product of products) {
+        // Verificamos si el producto ya existe en Firebase por el título
+        const existingProduct = items.find(
+          (item) => item.title === product.title
+        );
+
+        // Si el producto no existe en Firebase, lo agregamos
+        if (!existingProduct) {
+          await addDoc(collection(db, "products"), {
+            title: product.title,
+            price: product.price,
+            stock: product.stock,
+            category: product.category,
+          });
+          console.log(`Producto agregado: ${product.title}`);
+        } else {
+          console.log(`Producto ya existe: ${product.title}`);
+        }
+      }
+      // Actualizamos la lista de productos después de agregar los nuevos
+      const itemsCollection = collection(db, "products");
+      const snapshot = await getDocs(itemsCollection);
+      const fetchedItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setItems(fetchedItems);
+
+      alert("Productos agregados correctamente.");
+    } catch (error) {
+      console.error("Error al agregar productos:", error);
+      alert("Hubo un error al agregar los productos.");
+    }
   };
 
-  // Función para agregar productos
+  // Función para agregar un producto manualmente
   const agregarProducto = async (e) => {
     e.preventDefault();
 
     // Verificamos si el producto ya existe
-    if (checkIfProductExists(newTitle)) {
+    if (items.some((item) => item.title === newTitle)) {
       alert("Este producto ya existe en la base de datos.");
       return;
     }
@@ -88,55 +115,11 @@ const ItemListContainer = () => {
     }
   };
 
-  // Función para editar un producto
-  const editarProducto = async (e) => {
-    e.preventDefault();
-
-    if (!selectedItemId) {
-      alert("Por favor, selecciona un producto para editar.");
-      return;
-    }
-
-    const productRef = doc(db, "products", selectedItemId);
-    const updatedData = {};
-
-    if (newTitle) updatedData.title = newTitle;
-    if (newPrice) updatedData.price = newPrice;
-    if (newStock) updatedData.stock = newStock;
-    if (newCategory) updatedData.category = newCategory;
-
-    if (Object.keys(updatedData).length === 0) {
-      alert("Debes seleccionar al menos un campo para actualizar.");
-      return;
-    }
-
-    try {
-      await updateDoc(productRef, updatedData);
-      alert("Producto actualizado exitosamente.");
-
-      // Actualizar los productos en la interfaz
-      const updatedItems = items.map((item) =>
-        item.id === selectedItemId ? { ...item, ...updatedData } : item
-      );
-      setItems(updatedItems);
-
-      // Limpiar campos
-      setSelectedItemId("");
-      setNewTitle("");
-      setNewPrice("");
-      setNewStock("");
-      setNewCategory("");
-    } catch (error) {
-      console.error("Error al actualizar el producto:", error);
-      alert("Error al actualizar el producto.");
-    }
-  };
-
   return (
     <div className="container mx-auto px-4">
       <ItemList items={items} />
 
-      {/* Formulario para agregar productos */}
+      {/* Formulario para agregar productos manualmente */}
       <div className="mt-6">
         <h2 className="text-xl font-semibold mb-4">Agregar Producto</h2>
         <form onSubmit={agregarProducto}>
@@ -198,81 +181,14 @@ const ItemListContainer = () => {
         </form>
       </div>
 
-      {/* Formulario para editar productos */}
+      {/* Botón para agregar productos desde el archivo products.js */}
       <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-4">Editar Producto</h2>
-        <select
-          value={selectedItemId}
-          onChange={(e) => setSelectedItemId(e.target.value)}
-          className="select select-bordered w-full mb-4"
-        >
-          <option value="">Seleccionar producto para editar</option>
-          {items.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.title}
-            </option>
-          ))}
-        </select>
-
-        {selectedItemId && (
-          <form onSubmit={editarProducto}>
-            <div className="mb-4">
-              <label htmlFor="title" className="block font-medium">
-                Nuevo Título:
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="input input-bordered w-full"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="price" className="block font-medium">
-                Nuevo Precio:
-              </label>
-              <input
-                type="number"
-                id="price"
-                value={newPrice}
-                onChange={(e) => setNewPrice(e.target.value)}
-                className="input input-bordered w-full"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="stock" className="block font-medium">
-                Nuevo Stock:
-              </label>
-              <input
-                type="number"
-                id="stock"
-                value={newStock}
-                onChange={(e) => setNewStock(e.target.value)}
-                className="input input-bordered w-full"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="category" className="block font-medium">
-                Nueva Categoría:
-              </label>
-              <input
-                type="text"
-                id="category"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                className="input input-bordered w-full"
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary">
-              Actualizar Producto
-            </button>
-          </form>
-        )}
+        <h2 className="text-xl font-semibold mb-4">
+          Agregar Productos desde Archivo
+        </h2>
+        <button onClick={agregarProductosDesdeFile} className="btn btn-primary">
+          Agregar Productos Desde Archivo
+        </button>
       </div>
     </div>
   );
