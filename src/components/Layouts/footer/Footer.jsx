@@ -1,47 +1,42 @@
-import React from "react";
-import instagram from "/logoInstagram.svg";
-import whatsapp from "/logoWhatsapp.svg";
-import googleMaps from "/logoGoogleMaps.svg";
-import { LogoContext } from "../../../context/LogoContext";
-import { useContext } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ItemListContainer from "./components/pages/itemListComponents/ItemListContainer";
+import Navbar from "./components/Layouts/navbar/Navbar";
+import Footer from "./components/layouts/footer/Footer";
+import CartContainer from "./components/pages/cart/CartContainer";
+import ItemDetailContainer from "./components/pages/itemDetail/ItemDetailContainer";
+import Page404 from "./components/pages/404/Page404";
+import { CartContextProvider } from "./context/CartContext";
+import { LogoContextProvider } from "./context/LogoContext";
+import { AlertProvider } from "./context/AlertContext";
+import Checkout from "./components/pages/checkout/Checkout";
 
-const Footer = () => {
-  const { currentLogo } = useContext(LogoContext);
-
+function App() {
   return (
-    <footer className="footer footer-center bg-base-300 p-10">
-      <aside>
-        <img src={currentLogo} alt="logosphere" className="w-20" />
-        <p className="font-bold text-base-content">GRANOLA POWERFIT</p>
-        <p className="text-base-content">
-          Copyright © {new Date().getFullYear()} - Todos los derechos reservados
-        </p>
-        <p className="text-xs text-right">Hecho con ❤️ por Jesús Gil</p>
-      </aside>
-      <nav>
-        <div className="grid grid-flow-col gap-4">
-          <button className="btn btn-ghost p-0">
-            <a href="https://www.instagram.com/camiangel2009/" target="_blank">
-              <img src={instagram} alt="Instagram" />
-            </a>
-          </button>
-          <button className="btn btn-ghost p-0">
-            <a
-              href={`https://api.whatsapp.com/send?phone=1158965675`}
-              target="_blank"
-            >
-              <img src={whatsapp} alt="Whatsapp" />
-            </a>
-          </button>
-          <button className="btn btn-ghost p-0">
-            <a href="https://maps.app.goo.gl/oxfdeiLvJgcqcKL59" target="blank">
-              <img src={googleMaps} alt="Google Maps" />
-            </a>
-          </button>
-        </div>
-      </nav>
-    </footer>
+    <BrowserRouter>
+      <AlertProvider>
+        <CartContextProvider>
+          <LogoContextProvider>
+            <Navbar />
+            <Routes>
+              <Route path={"/"} element={<ItemListContainer />} />
+              <Route
+                path={"/Category/:categoryName"}
+                element={<ItemListContainer />}
+              />
+              <Route
+                path={"/ProductDetail/:id"}
+                element={<ItemDetailContainer />}
+              />
+              <Route path={"/Cart"} element={<CartContainer />} />
+              <Route path={"*"} element={<Page404 />} />
+              <Route path={"/checkout"} element={<Checkout />} />
+            </Routes>
+            <Footer />
+          </LogoContextProvider>
+        </CartContextProvider>
+      </AlertProvider>
+    </BrowserRouter>
   );
-};
+}
 
-export default Footer;
+export default App;
