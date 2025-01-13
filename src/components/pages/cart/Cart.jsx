@@ -84,13 +84,16 @@ const Cart = ({ cart, deleteProductById, totalQuantity, total, clearCart }) => {
                 <div className="card-body">
                   <h2 className="card-title">{product.title}</h2>
                   <p className="font-semibold lg:text-xl">
-                    Precio: ${product.price}
+                    Precio: ${product.price.toFixed(2)}
                   </p>
+                  {/* Mostrar la cantidad en unidades o gramos */}
                   <p className="font-semibold lg:text-xl">
-                    Cantidad: {product.quantity}
+                    Cantidad: {product.quantity}{" "}
+                    {product.grams ? `(${product.grams} gramos)` : ""}
                   </p>
+                  {/* Mostrar el subtotal calculado según la cantidad y el precio */}
                   <p className="font-semibold lg:text-xl">
-                    Subtotal: ${product.price * product.quantity}
+                    Subtotal: ${(product.price * product.quantity).toFixed(2)}
                   </p>
                   <div className="card-actions justify-end">
                     <button

@@ -8,7 +8,23 @@ const Counter = ({
   grams,
   setGrams,
   calculatePrice,
+  productType, // Tipo de producto (condimento, fruto seco, harina, etc.)
+  pricePerKg, // Precio por kilogramo
 }) => {
+  // Función para calcular el precio en base a los gramos
+  const calculatePricePerGram = (grams) => {
+    if (
+      productType === "condimento" ||
+      productType === "fruto seco" ||
+      productType === "harina"
+    ) {
+      // Convertimos el precio de kg a gramo
+      const pricePerGram = pricePerKg / 1000; // Precio por gramo
+      return pricePerGram * grams; // Calculamos el precio según los gramos
+    }
+    return pricePerKg * contador; // Si no es de los productos especiales, utilizamos el precio normal
+  };
+
   return (
     <div className="flex flex-row items-center">
       <button
@@ -40,7 +56,7 @@ const Counter = ({
 
       {/* Mostrar el precio calculado */}
       <h3 className="font-semibold mt-3">
-        Precio por {grams} gramos: ${calculatePrice(grams)}
+        Precio por {grams} gramos: ${calculatePricePerGram(grams)}
       </h3>
 
       <div>
