@@ -11,17 +11,15 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "../../../configFirebase";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const ItemListContainer = () => {
   const [items, setItems] = useState([]);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [newTitle, setNewTitle] = useState("");
-  const [newPrice, setNewPrice] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newImage, setNewImage] = useState(null); // Estado para la imagen
-  const [stockOriginal, setStockOriginal] = useState(0); // Para almacenar el stock original del producto
+  const [stockOriginal, setStockOriginal] = useState(0); // Para almacenar el stock original
+  const [showAddProductForm, setShowAddProductForm] = useState(false); // Estado para controlar la visibilidad del formulario de agregar producto
 
   const { categoryName } = useParams();
 
@@ -37,6 +35,7 @@ const ItemListContainer = () => {
       const fetchedItems = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
+        stock: Number(doc.data().stock), // Asegúrate de que stock sea un número
       }));
       setItems(fetchedItems);
     });
@@ -53,41 +52,26 @@ const ItemListContainer = () => {
     }
 
     try {
-      // Subir la imagen a Firebase Storage si está disponible
-      let imageUrl = "";
-      if (newImage) {
-        const storage = getStorage();
-        const imageRef = ref(storage, `products/${newImage.name}`);
-        await uploadBytes(imageRef, newImage);
-        imageUrl = await getDownloadURL(imageRef);
-      }
-
-      // Agregar el producto a la base de datos
+      // Agregamos el producto si no existe
       await addDoc(collection(db, "products"), {
         title: newTitle,
-        price: newPrice,
-        stock: newStock,
+        stock: Number(newStock), // Asegúrate de que el stock sea un número
         category: newCategory,
-        image: imageUrl, // Guardar la URL de la imagen
       });
       alert("Producto agregado exitosamente.");
 
-      // Limpiar los campos
+      // Limpiamos los campos
       setNewTitle("");
-      setNewPrice("");
       setNewStock("");
       setNewCategory("");
-      setNewImage(null); // Limpiar el campo de imagen
 
-      // Actualizar la lista de productos
+      // Actualizamos la lista de productos
       const updatedItems = [
         ...items,
         {
           title: newTitle,
-          price: newPrice,
-          stock: newStock,
+          stock: Number(newStock), // Asegúrate de que el stock sea un número
           category: newCategory,
-          image: imageUrl, // Agregar la URL de la imagen
         },
       ];
       setItems(updatedItems);
@@ -106,8 +90,9 @@ const ItemListContainer = () => {
     }
 
     const product = items.find((item) => item.id === selectedItemId);
-    const currentStock = product.stock;
+    const currentStock = product.stock; // Obtener el stock actual del producto
 
+    // Verificar si el nuevo stock es menor que el stock original
     if (newStock < currentStock) {
       alert("El stock no puede ser menor que el valor actual.");
       return;
@@ -117,18 +102,8 @@ const ItemListContainer = () => {
     const updatedData = {};
 
     if (newTitle) updatedData.title = newTitle;
-    if (newPrice) updatedData.price = newPrice;
-    if (newStock) updatedData.stock = newStock;
+    if (newStock) updatedData.stock = Number(newStock); // Asegúrate de que el stock sea un número
     if (newCategory) updatedData.category = newCategory;
-
-    // Subir la nueva imagen si está disponible
-    if (newImage) {
-      const storage = getStorage();
-      const imageRef = ref(storage, `products/${newImage.name}`);
-      await uploadBytes(imageRef, newImage);
-      const imageUrl = await getDownloadURL(imageRef);
-      updatedData.image = imageUrl; // Agregar la nueva URL de la imagen
-    }
 
     if (Object.keys(updatedData).length === 0) {
       alert("Debes seleccionar al menos un campo para actualizar.");
@@ -139,19 +114,17 @@ const ItemListContainer = () => {
       await updateDoc(productRef, updatedData);
       alert("Producto actualizado exitosamente.");
 
-      // Actualizar la lista de productos
+      // Actualizar los productos en la interfaz
       const updatedItems = items.map((item) =>
         item.id === selectedItemId ? { ...item, ...updatedData } : item
       );
       setItems(updatedItems);
 
-      // Limpiar los campos
+      // Limpiar campos
       setSelectedItemId("");
       setNewTitle("");
-      setNewPrice("");
       setNewStock("");
       setNewCategory("");
-      setNewImage(null); // Limpiar el campo de imagen
     } catch (error) {
       console.error("Error al actualizar el producto:", error);
       alert("Error al actualizar el producto.");
@@ -166,7 +139,6 @@ const ItemListContainer = () => {
     if (productId) {
       const selectedProduct = items.find((item) => item.id === productId);
       setNewTitle(selectedProduct.title);
-      setNewPrice(selectedProduct.price);
       setNewStock(selectedProduct.stock);
       setNewCategory(selectedProduct.category);
       setStockOriginal(selectedProduct.stock); // Guardamos el stock original
@@ -177,80 +149,70 @@ const ItemListContainer = () => {
     <div className="container mx-auto px-4">
       <ItemList items={items} />
 
-      {/* Formulario para agregar productos */}
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-4">Agregar Producto</h2>
-        <form onSubmit={agregarProducto}>
-          <div className="mb-4">
-            <label htmlFor="title" className="block font-medium">
-              Título:
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="input input-bordered w-full"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="price" className="block font-medium">
-              Precio:
-            </label>
-            <input
-              type="number"
-              id="price"
-              value={newPrice}
-              onChange={(e) => setNewPrice(e.target.value)}
-              className="input input-bordered w-full"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="stock" className="block font-medium">
-              Stock:
-            </label>
-            <input
-              type="number"
-              id="stock"
-              value={newStock}
-              onChange={(e) => setNewStock(e.target.value)}
-              className="input input-bordered w-full"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="category" className="block font-medium">
-              Categoría:
-            </label>
-            <input
-              type="text"
-              id="category"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              className="input input-bordered w-full"
-            />
-          </div>
-
-          {/* Campo para seleccionar la imagen */}
-          <div className="mb-4">
-            <label htmlFor="image" className="block font-medium">
-              Imagen:
-            </label>
-            <input
-              type="file"
-              id="image"
-              onChange={(e) => setNewImage(e.target.files[0])}
-              className="input input-bordered w-full"
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary">
-            Agregar Producto
-          </button>
-        </form>
+      {/* Botón para mostrar/ocultar formulario de agregar producto */}
+      <div className="mb-4">
+        <button
+          onClick={() => setShowAddProductForm(!showAddProductForm)}
+          className="btn btn-secondary"
+        >
+          {showAddProductForm ? "Ocultar Formulario" : "Agregar Producto"}
+        </button>
       </div>
+
+      {/* Formulario para agregar productos - solo visible si showAddProductForm es true */}
+      {showAddProductForm && (
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              Agregar Producto
+            </h2>
+            <form onSubmit={agregarProducto}>
+              <div className="mb-4">
+                <label htmlFor="title" className="block font-medium">
+                  Título:
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="input input-bordered w-full"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="stock" className="block font-medium">
+                  Stock:
+                </label>
+                <input
+                  type="number"
+                  id="stock"
+                  value={newStock}
+                  onChange={(e) => setNewStock(e.target.value)}
+                  className="input input-bordered w-full"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="category" className="block font-medium">
+                  Categoría:
+                </label>
+                <input
+                  type="text"
+                  id="category"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="input input-bordered w-full"
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary w-full">
+                Agregar Producto
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Formulario para editar productos */}
       <div className="mt-6">
@@ -284,19 +246,6 @@ const ItemListContainer = () => {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="price" className="block font-medium">
-                Nuevo Precio:
-              </label>
-              <input
-                type="number"
-                id="price"
-                value={newPrice}
-                onChange={(e) => setNewPrice(e.target.value)}
-                className="input input-bordered w-full"
-              />
-            </div>
-
-            <div className="mb-4">
               <label htmlFor="stock" className="block font-medium">
                 Nuevo Stock:
               </label>
@@ -318,19 +267,6 @@ const ItemListContainer = () => {
                 id="category"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                className="input input-bordered w-full"
-              />
-            </div>
-
-            {/* Campo para seleccionar la imagen */}
-            <div className="mb-4">
-              <label htmlFor="image" className="block font-medium">
-                Nueva Imagen:
-              </label>
-              <input
-                type="file"
-                id="image"
-                onChange={(e) => setNewImage(e.target.files[0])}
                 className="input input-bordered w-full"
               />
             </div>
