@@ -20,9 +20,8 @@ const ItemListContainer = () => {
   const [newPrice, setNewPrice] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newImage, setNewImage] = useState(null);
-  const [stockOriginal, setStockOriginal] = useState(0);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
+  const [newImage, setNewImage] = useState(null); // Estado para la imagen
+  const [stockOriginal, setStockOriginal] = useState(0); // Para almacenar el stock original del producto
 
   const { categoryName } = useParams();
 
@@ -47,12 +46,14 @@ const ItemListContainer = () => {
   const agregarProducto = async (e) => {
     e.preventDefault();
 
+    // Verificamos si el producto ya existe
     if (items.some((item) => item.title === newTitle)) {
       alert("Este producto ya existe en la base de datos.");
       return;
     }
 
     try {
+      // Subir la imagen a Firebase Storage si está disponible
       let imageUrl = "";
       if (newImage) {
         const storage = getStorage();
@@ -61,21 +62,24 @@ const ItemListContainer = () => {
         imageUrl = await getDownloadURL(imageRef);
       }
 
+      // Agregar el producto a la base de datos
       await addDoc(collection(db, "products"), {
         title: newTitle,
         price: newPrice,
         stock: newStock,
         category: newCategory,
-        image: imageUrl,
+        image: imageUrl, // Guardar la URL de la imagen
       });
       alert("Producto agregado exitosamente.");
 
+      // Limpiar los campos
       setNewTitle("");
       setNewPrice("");
       setNewStock("");
       setNewCategory("");
-      setNewImage(null);
+      setNewImage(null); // Limpiar el campo de imagen
 
+      // Actualizar la lista de productos
       const updatedItems = [
         ...items,
         {
@@ -83,7 +87,7 @@ const ItemListContainer = () => {
           price: newPrice,
           stock: newStock,
           category: newCategory,
-          image: imageUrl,
+          image: imageUrl, // Agregar la URL de la imagen
         },
       ];
       setItems(updatedItems);
@@ -92,7 +96,7 @@ const ItemListContainer = () => {
     }
   };
 
-  // Función para editar productos
+  // Función para editar un producto
   const editarProducto = async (e) => {
     e.preventDefault();
 
@@ -117,12 +121,13 @@ const ItemListContainer = () => {
     if (newStock) updatedData.stock = newStock;
     if (newCategory) updatedData.category = newCategory;
 
+    // Subir la nueva imagen si está disponible
     if (newImage) {
       const storage = getStorage();
       const imageRef = ref(storage, `products/${newImage.name}`);
       await uploadBytes(imageRef, newImage);
       const imageUrl = await getDownloadURL(imageRef);
-      updatedData.image = imageUrl;
+      updatedData.image = imageUrl; // Agregar la nueva URL de la imagen
     }
 
     if (Object.keys(updatedData).length === 0) {
@@ -134,17 +139,19 @@ const ItemListContainer = () => {
       await updateDoc(productRef, updatedData);
       alert("Producto actualizado exitosamente.");
 
+      // Actualizar la lista de productos
       const updatedItems = items.map((item) =>
         item.id === selectedItemId ? { ...item, ...updatedData } : item
       );
       setItems(updatedItems);
 
+      // Limpiar los campos
       setSelectedItemId("");
       setNewTitle("");
       setNewPrice("");
       setNewStock("");
       setNewCategory("");
-      setNewImage(null);
+      setNewImage(null); // Limpiar el campo de imagen
     } catch (error) {
       console.error("Error al actualizar el producto:", error);
       alert("Error al actualizar el producto.");
@@ -162,34 +169,13 @@ const ItemListContainer = () => {
       setNewPrice(selectedProduct.price);
       setNewStock(selectedProduct.stock);
       setNewCategory(selectedProduct.category);
-      setStockOriginal(selectedProduct.stock);
+      setStockOriginal(selectedProduct.stock); // Guardamos el stock original
     }
   };
 
-  // Filtrar los productos por nombre
-  const filteredItems = items.filter((item) =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="container mx-auto px-4">
-      {/* Campo de búsqueda */}
-      <div className="mb-4">
-        <label htmlFor="search" className="block font-medium">
-          Buscar Producto:
-        </label>
-        <input
-          type="text"
-          id="search"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="input input-bordered w-full"
-          placeholder="Buscar por nombre..."
-        />
-      </div>
-
-      {/* Mostrar los productos filtrados */}
-      <ItemList items={filteredItems} />
+      <ItemList items={items} />
 
       {/* Formulario para agregar productos */}
       <div className="mt-6">
@@ -247,6 +233,7 @@ const ItemListContainer = () => {
             />
           </div>
 
+          {/* Campo para seleccionar la imagen */}
           <div className="mb-4">
             <label htmlFor="image" className="block font-medium">
               Imagen:
@@ -335,6 +322,7 @@ const ItemListContainer = () => {
               />
             </div>
 
+            {/* Campo para seleccionar la imagen */}
             <div className="mb-4">
               <label htmlFor="image" className="block font-medium">
                 Nueva Imagen:

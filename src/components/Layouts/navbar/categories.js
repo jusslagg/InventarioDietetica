@@ -19,7 +19,7 @@ export const categories = [
   { title: "Heladera", path: "/Category/Heladera" },
   { title: "Leche", path: "/Category/Leche" },
   { title: "Mermeladas", path: "/Category/Mermeladas" },
-  { title: "Nutrileva", path: "/Category/nutrileva" },
+  { title: "Nutrileva", path: "/Category/Nutrileva" },
   { title: "Pan", path: "/Category/pan" },
   { title: "Pasta de mani", path: "/Category/Pasta-de-mani" },
   { title: "Porotos", path: "/Category/Porotos" },

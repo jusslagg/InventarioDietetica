@@ -7,12 +7,7 @@ import { useContext, useState } from "react";
 
 const Navbar = () => {
   const { currentLogo } = useContext(LogoContext);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Estado para controlar el menú desplegable
-
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -59,14 +54,6 @@ const Navbar = () => {
 
       {/* Final del Navbar */}
       <div className="navbar-end flex items-center space-x-4">
-        <input
-          type="text"
-          className="input input-bordered w-full max-w-xs"
-          placeholder="Buscar producto..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-        <button className="btn btn-ghost btn-sm">Buscar</button>
         <ThemeController />
         <Link to="/Cart">
           <CartWidget />
