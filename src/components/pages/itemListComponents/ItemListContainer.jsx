@@ -14,12 +14,14 @@ import { db } from "../../../configFirebase";
 
 const ItemListContainer = () => {
   const [items, setItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]); // Estado para los productos filtrados
   const [selectedItemId, setSelectedItemId] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [stockOriginal, setStockOriginal] = useState(0); // Para almacenar el stock original
-  const [showAddProductForm, setShowAddProductForm] = useState(false); // Estado para controlar la visibilidad del formulario de agregar producto
+  const [stockOriginal, setStockOriginal] = useState(0);
+  const [showAddProductForm, setShowAddProductForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
 
   const { categoryName } = useParams();
 
@@ -35,46 +37,59 @@ const ItemListContainer = () => {
       const fetchedItems = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        stock: Number(doc.data().stock), // Asegúrate de que stock sea un número
+        stock: Number(doc.data().stock),
       }));
       setItems(fetchedItems);
+      setFilteredItems(fetchedItems); // Inicialmente, los productos filtrados son todos los productos
     });
   }, [categoryName]);
+
+  // Función para manejar el cambio en el campo de búsqueda
+  const handleSearchChange = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    setSearchTerm(searchTerm);
+
+    // Filtrar los productos en base al término de búsqueda
+    const filtered = items.filter((item) => {
+      const title = item.title ? item.title.toLowerCase() : "";
+      const category = item.category ? item.category.toLowerCase() : "";
+      return title.includes(searchTerm) || category.includes(searchTerm);
+    });
+
+    setFilteredItems(filtered);
+  };
 
   // Función para agregar productos
   const agregarProducto = async (e) => {
     e.preventDefault();
 
-    // Verificamos si el producto ya existe
     if (items.some((item) => item.title === newTitle)) {
       alert("Este producto ya existe en la base de datos.");
       return;
     }
 
     try {
-      // Agregamos el producto si no existe
       await addDoc(collection(db, "products"), {
         title: newTitle,
-        stock: Number(newStock), // Asegúrate de que el stock sea un número
+        stock: Number(newStock),
         category: newCategory,
       });
       alert("Producto agregado exitosamente.");
 
-      // Limpiamos los campos
       setNewTitle("");
       setNewStock("");
       setNewCategory("");
 
-      // Actualizamos la lista de productos
       const updatedItems = [
         ...items,
         {
           title: newTitle,
-          stock: Number(newStock), // Asegúrate de que el stock sea un número
+          stock: Number(newStock),
           category: newCategory,
         },
       ];
       setItems(updatedItems);
+      setFilteredItems(updatedItems); // Actualizar los productos filtrados
     } catch (error) {
       console.error("Error al agregar el producto:", error);
     }
@@ -90,9 +105,8 @@ const ItemListContainer = () => {
     }
 
     const product = items.find((item) => item.id === selectedItemId);
-    const currentStock = product.stock; // Obtener el stock actual del producto
+    const currentStock = product.stock;
 
-    // Verificar si el nuevo stock es menor que el stock original
     if (newStock < currentStock) {
       alert("El stock no puede ser menor que el valor actual.");
       return;
@@ -102,7 +116,7 @@ const ItemListContainer = () => {
     const updatedData = {};
 
     if (newTitle) updatedData.title = newTitle;
-    if (newStock) updatedData.stock = Number(newStock); // Asegúrate de que el stock sea un número
+    if (newStock) updatedData.stock = Number(newStock);
     if (newCategory) updatedData.category = newCategory;
 
     if (Object.keys(updatedData).length === 0) {
@@ -114,13 +128,12 @@ const ItemListContainer = () => {
       await updateDoc(productRef, updatedData);
       alert("Producto actualizado exitosamente.");
 
-      // Actualizar los productos en la interfaz
       const updatedItems = items.map((item) =>
         item.id === selectedItemId ? { ...item, ...updatedData } : item
       );
       setItems(updatedItems);
+      setFilteredItems(updatedItems); // Actualizar los productos filtrados
 
-      // Limpiar campos
       setSelectedItemId("");
       setNewTitle("");
       setNewStock("");
@@ -131,7 +144,6 @@ const ItemListContainer = () => {
     }
   };
 
-  // Manejo de selección del producto
   const handleSelectProduct = (e) => {
     const productId = e.target.value;
     setSelectedItemId(productId);
@@ -141,15 +153,23 @@ const ItemListContainer = () => {
       setNewTitle(selectedProduct.title);
       setNewStock(selectedProduct.stock);
       setNewCategory(selectedProduct.category);
-      setStockOriginal(selectedProduct.stock); // Guardamos el stock original
+      setStockOriginal(selectedProduct.stock);
     }
   };
 
   return (
     <div className="container mx-auto px-4">
-      <ItemList items={items} />
-
-      {/* Botón para mostrar/ocultar formulario de agregar producto */}
+      {/* Campo de búsqueda */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="Buscar producto..."
+          className="input input-bordered w-full"
+        />
+      </div>
+      <ItemList items={filteredItems} /> {/* Mostrar los productos filtrados */}
       <div className="mb-4">
         <button
           onClick={() => setShowAddProductForm(!showAddProductForm)}
@@ -158,8 +178,6 @@ const ItemListContainer = () => {
           {showAddProductForm ? "Ocultar Formulario" : "Agregar Producto"}
         </button>
       </div>
-
-      {/* Formulario para agregar productos - solo visible si showAddProductForm es true */}
       {showAddProductForm && (
         <div className="flex justify-center items-center min-h-screen">
           <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-lg">
@@ -213,8 +231,6 @@ const ItemListContainer = () => {
           </div>
         </div>
       )}
-
-      {/* Formulario para editar productos */}
       <div className="mt-6">
         <h2 className="text-xl font-semibold mb-4">Editar Producto</h2>
         <select
