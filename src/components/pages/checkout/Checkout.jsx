@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useMemo } from "react";
 import { CartContext } from "../../../context/CartContext";
 import {
   addDoc,
@@ -184,6 +184,34 @@ const Checkout = () => {
     getSalesByMonth(month);
   };
 
+  // Calcular el total de ventas por día
+  const totalSalesByDay = useMemo(() => {
+    const totals = {};
+    dailySales.forEach((sale) => {
+      const date = sale.createdAt.toDate().toLocaleDateString();
+      if (!totals[date]) {
+        totals[date] = 0;
+      }
+      totals[date] += sale.total;
+    });
+    return totals;
+  }, [dailySales]);
+
+  // Calcular el total de ventas por mes
+  const totalSalesByMonth = useMemo(() => {
+    const totals = {};
+    last30DaysSales.forEach((sale) => {
+      const month = sale.createdAt
+        .toDate()
+        .toLocaleString("default", { month: "long", year: "numeric" });
+      if (!totals[month]) {
+        totals[month] = 0;
+      }
+      totals[month] += sale.total;
+    });
+    return totals;
+  }, [last30DaysSales]);
+
   if (isLoading) {
     return <h2>cargando...</h2>;
   }
@@ -274,6 +302,32 @@ const Checkout = () => {
           />
           <p>Total ventas: ${totalSalesMonth}</p>
         </div>
+      </div>
+
+      {/* Mostrar total de ventas por día */}
+      <div className="my-8">
+        <h2 className="text-xl font-semibold">Total de ventas por día</h2>
+        <ul>
+          {Object.entries(totalSalesByDay).map(([date, total]) => (
+            <li key={date}>
+              <p>Fecha: {date}</p>
+              <p>Total: ${total.toFixed(2)}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Mostrar total de ventas por mes */}
+      <div className="my-8">
+        <h2 className="text-xl font-semibold">Total de ventas por mes</h2>
+        <ul>
+          {Object.entries(totalSalesByMonth).map(([month, total]) => (
+            <li key={month}>
+              <p>Mes: {month}</p>
+              <p>Total: ${total.toFixed(2)}</p>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Mostrar ventas del día */}
