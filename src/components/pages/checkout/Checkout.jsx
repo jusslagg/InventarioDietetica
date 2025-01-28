@@ -239,6 +239,7 @@ const Checkout = () => {
                   </option>
                   <option value="Yamila Gonzalez">Yamila Gonzalez</option>
                   <option value="Daniela Urbina">Daniela Urbina</option>
+                  <option value="Daniela Urbina">Mirna Gallardo</option>
                   <option value="Otros">Otros</option>
                 </select>
               </label>
