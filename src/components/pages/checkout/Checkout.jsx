@@ -267,7 +267,6 @@ const Checkout = () => {
                   <option value="Posnet">Posnet</option>
                   <option value="Galicia QR">Galicia QR</option>
                   <option value="Cuenta DNI">Cuenta DNI</option>
-                  <option value="Mercado Pago Dani">Mercado Pago Dani</option>
                   <option value="Mercado Pago Yami">Mercado Pago Yami</option>
                 </select>
               </label>
@@ -283,7 +282,6 @@ const Checkout = () => {
                   <option value={10}>10% de descuento</option>
                   <option value={20}>20% de descuento</option>
                   <option value={50}>50% de descuento</option>
-                  <option value={80}>80% de descuento</option>
                 </select>
               </label>
 
