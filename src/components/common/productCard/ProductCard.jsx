@@ -1,6 +1,17 @@
 import { Link } from "react-router-dom";
+import { useContext, useState } from "react";
+import CounterContainer from "../counter/CounterContainer";
+import { CartContext } from "../../../context/CartContext";
 
 const ProductCard = ({ id, title, price, stock, imageUrl, category }) => {
+  const { addToCart, getTotalQuantityById } = useContext(CartContext);
+  const totalAdded = getTotalQuantityById(id);
+
+  const addOn = (quantity) => {
+    const product = { id, title, price, stock, imageUrl, category, quantity };
+    addToCart(product);
+  };
+
   return (
     <div className="card card-side md:card card-compact bg-base-100 w-64 md:w-72 shadow-xl">
       <figure className="w-full flex justify-center items-center">
@@ -20,6 +31,7 @@ const ProductCard = ({ id, title, price, stock, imageUrl, category }) => {
             <button className="btn btn-primary">Ver más</button>
           </Link>
         </div>
+        <CounterContainer stock={stock} addOn={addOn} totalAdded={totalAdded} />
       </div>
     </div>
   );
