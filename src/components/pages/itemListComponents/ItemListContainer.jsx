@@ -74,12 +74,14 @@ const ItemListContainer = () => {
         title: newTitle,
         stock: Number(newStock),
         category: newCategory,
+        price: Number(newPrice),
       });
       alert("Producto agregado exitosamente.");
 
       setNewTitle("");
       setNewStock("");
       setNewCategory("");
+      setNewPrice("");
 
       const updatedItems = [
         ...items,
@@ -87,6 +89,7 @@ const ItemListContainer = () => {
           title: newTitle,
           stock: Number(newStock),
           category: newCategory,
+          price: Number(newPrice),
         },
       ];
       setItems(updatedItems);
@@ -109,28 +112,35 @@ const ItemListContainer = () => {
     const currentStock = product.stock;
     const currentPrice = product.price;
 
-    if (newStock < currentStock) {
-      alert("El stock no puede ser menor que el valor actual.");
-      return;
-    }
-
-    if (newPrice <= currentPrice) {
-      alert("El nuevo precio debe ser mayor que el precio actual.");
-      return;
-    }
-
-    const productRef = doc(db, "products", selectedItemId);
     const updatedData = {};
 
+    if (newStock) {
+      if (newStock > currentStock) {
+        updatedData.stock = Number(newStock);
+      } else {
+        alert("El stock no puede ser menor o igual que el valor actual.");
+        return;
+      }
+    }
+
+    if (newPrice) {
+      if (newPrice > currentPrice) {
+        updatedData.price = Number(newPrice);
+      } else {
+        alert("El nuevo precio debe ser mayor que el precio actual.");
+        return;
+      }
+    }
+
     if (newTitle) updatedData.title = newTitle;
-    if (newStock) updatedData.stock = Number(newStock);
     if (newCategory) updatedData.category = newCategory;
-    if (newPrice) updatedData.price = Number(newPrice);
 
     if (Object.keys(updatedData).length === 0) {
       alert("Debes seleccionar al menos un campo para actualizar.");
       return;
     }
+
+    const productRef = doc(db, "products", selectedItemId);
 
     try {
       await updateDoc(productRef, updatedData);
@@ -234,6 +244,19 @@ const ItemListContainer = () => {
                 />
               </div>
 
+              <div className="mb-4">
+                <label htmlFor="price" className="block font-medium">
+                  Precio:
+                </label>
+                <input
+                  type="number"
+                  id="price"
+                  value={newPrice}
+                  onChange={(e) => setNewPrice(e.target.value)}
+                  className="input input-bordered w-full"
+                />
+              </div>
+
               <button type="submit" className="btn btn-primary w-full">
                 Agregar Producto
               </button>
@@ -282,6 +305,31 @@ const ItemListContainer = () => {
                 onChange={(e) => setNewStock(e.target.value)}
                 className="input input-bordered w-full"
               />
+              <button
+                type="button"
+                onClick={async () => {
+                  if (newStock > stockOriginal) {
+                    const productRef = doc(db, "products", selectedItemId);
+                    await updateDoc(productRef, { stock: Number(newStock) });
+                    alert("Stock actualizado exitosamente.");
+                    const updatedItems = items.map((item) =>
+                      item.id === selectedItemId
+                        ? { ...item, stock: Number(newStock) }
+                        : item
+                    );
+                    setItems(updatedItems);
+                    setFilteredItems(updatedItems);
+                    setNewStock("");
+                  } else {
+                    alert(
+                      "El stock no puede ser menor o igual que el valor actual."
+                    );
+                  }
+                }}
+                className="btn btn-primary mt-2"
+              >
+                Actualizar Stock
+              </button>
             </div>
 
             <div className="mb-4">
@@ -307,12 +355,32 @@ const ItemListContainer = () => {
                 value={newPrice}
                 onChange={(e) => setNewPrice(e.target.value)}
                 className="input input-bordered w-full"
-                min={
-                  selectedItemId
-                    ? items.find((item) => item.id === selectedItemId).price + 1
-                    : 0
-                }
               />
+              <button
+                type="button"
+                onClick={async () => {
+                  if (newPrice > product.price) {
+                    const productRef = doc(db, "products", selectedItemId);
+                    await updateDoc(productRef, { price: Number(newPrice) });
+                    alert("Precio actualizado exitosamente.");
+                    const updatedItems = items.map((item) =>
+                      item.id === selectedItemId
+                        ? { ...item, price: Number(newPrice) }
+                        : item
+                    );
+                    setItems(updatedItems);
+                    setFilteredItems(updatedItems);
+                    setNewPrice("");
+                  } else {
+                    alert(
+                      "El nuevo precio debe ser mayor que el precio actual."
+                    );
+                  }
+                }}
+                className="btn btn-primary mt-2"
+              >
+                Actualizar Precio
+              </button>
             </div>
 
             <button type="submit" className="btn btn-primary">
