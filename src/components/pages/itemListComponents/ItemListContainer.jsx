@@ -19,6 +19,7 @@ const ItemListContainer = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newCategory, setNewCategory] = useState("");
+  const [newPrice, setNewPrice] = useState(""); // Estado para el nuevo precio
   const [stockOriginal, setStockOriginal] = useState(0);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
@@ -106,9 +107,15 @@ const ItemListContainer = () => {
 
     const product = items.find((item) => item.id === selectedItemId);
     const currentStock = product.stock;
+    const currentPrice = product.price;
 
     if (newStock < currentStock) {
       alert("El stock no puede ser menor que el valor actual.");
+      return;
+    }
+
+    if (newPrice <= currentPrice) {
+      alert("El nuevo precio debe ser mayor que el precio actual.");
       return;
     }
 
@@ -118,6 +125,7 @@ const ItemListContainer = () => {
     if (newTitle) updatedData.title = newTitle;
     if (newStock) updatedData.stock = Number(newStock);
     if (newCategory) updatedData.category = newCategory;
+    if (newPrice) updatedData.price = Number(newPrice);
 
     if (Object.keys(updatedData).length === 0) {
       alert("Debes seleccionar al menos un campo para actualizar.");
@@ -138,6 +146,7 @@ const ItemListContainer = () => {
       setNewTitle("");
       setNewStock("");
       setNewCategory("");
+      setNewPrice("");
     } catch (error) {
       console.error("Error al actualizar el producto:", error);
       alert("Error al actualizar el producto.");
@@ -153,6 +162,7 @@ const ItemListContainer = () => {
       setNewTitle(selectedProduct.title);
       setNewStock(selectedProduct.stock);
       setNewCategory(selectedProduct.category);
+      setNewPrice(selectedProduct.price);
       setStockOriginal(selectedProduct.stock);
     }
   };
@@ -284,6 +294,24 @@ const ItemListContainer = () => {
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 className="input input-bordered w-full"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="price" className="block font-medium">
+                Nuevo Precio:
+              </label>
+              <input
+                type="number"
+                id="price"
+                value={newPrice}
+                onChange={(e) => setNewPrice(e.target.value)}
+                className="input input-bordered w-full"
+                min={
+                  selectedItemId
+                    ? items.find((item) => item.id === selectedItemId).price + 1
+                    : 0
+                }
               />
             </div>
 
