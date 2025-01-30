@@ -104,7 +104,6 @@ const Checkout = () => {
       "Posnet",
       "Galicia QR",
       "Cuenta DNI",
-      "Mercado Pago Dani",
       "Mercado Pago Yami",
     ];
     let salesByPayment = {};
