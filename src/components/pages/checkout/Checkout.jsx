@@ -23,6 +23,7 @@ const Checkout = () => {
   const [totalSalesMonth, setTotalSalesMonth] = useState(0); // Total de ventas por mes
   const [selectedDate, setSelectedDate] = useState(""); // Estado para fecha seleccionada
   const [salesByPaymentMethod, setSalesByPaymentMethod] = useState({}); // Ventas por método de pago
+  const [selectedDiscount, setSelectedDiscount] = useState(0); // Estado para el descuento seleccionado
 
   const { cart, getTotalAmount, clearCart } = useContext(CartContext);
 
@@ -137,6 +138,9 @@ const Checkout = () => {
     e.preventDefault();
     setIsLoading(true);
     let total = getTotalAmount();
+    const discountAmount = total * (selectedDiscount / 100);
+    total -= discountAmount;
+
     const order = {
       seller: selectedSeller,
       paymentMethod: selectedPaymentMethod, // Guardar el método de pago
@@ -172,6 +176,8 @@ const Checkout = () => {
       setSelectedSeller(value);
     } else if (name === "paymentMethod") {
       setSelectedPaymentMethod(value);
+    } else if (name === "discount") {
+      setSelectedDiscount(Number(value));
     }
   };
 
@@ -183,6 +189,10 @@ const Checkout = () => {
     const month = new Date(e.target.value);
     getSalesByMonth(month);
   };
+
+  const totalAmount = getTotalAmount();
+  const discountAmount = totalAmount * (selectedDiscount / 100);
+  const totalWithDiscount = totalAmount - discountAmount;
 
   // Calcular el total de ventas por día
   const totalSalesByDay = useMemo(() => {
@@ -239,7 +249,7 @@ const Checkout = () => {
                   </option>
                   <option value="Yamila Gonzalez">Yamila Gonzalez</option>
                   <option value="Daniela Urbina">Daniela Urbina</option>
-                  <option value="Daniela Urbina">Mirna Gallardo</option>
+                  <option value="Mirna Gallardo">Mirna Gallardo</option>
                   <option value="Otros">Otros</option>
                 </select>
               </label>
@@ -262,6 +272,25 @@ const Checkout = () => {
                   <option value="Mercado Pago Yami">Mercado Pago Yami</option>
                 </select>
               </label>
+
+              <label className="input input-bordered flex items-center gap-2 my-1">
+                <select
+                  name="discount"
+                  onChange={handleChange}
+                  value={selectedDiscount}
+                  className="input input-bordered"
+                >
+                  <option value={0}>Sin descuento</option>
+                  <option value={10}>10% de descuento</option>
+                  <option value={20}>20% de descuento</option>
+                  <option value={50}>50% de descuento</option>
+                  <option value={80}>80% de descuento</option>
+                </select>
+              </label>
+
+              <div className="my-4">
+                <h2>Total a pagar: ${totalWithDiscount.toFixed(2)}</h2>
+              </div>
 
               <div className="card-actions justify-end">
                 <button className="btn btn-primary">Comprar</button>

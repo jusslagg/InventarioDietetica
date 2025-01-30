@@ -39,7 +39,7 @@ const Cart = ({ cart, deleteProductById, totalQuantity, total, clearCart }) => {
             </div>
 
             {/* Selector de descuento */}
-            <div className="mb-3">
+            {/* <div className="mb-3">
               <label className="font-semibold mb-2">
                 Selecciona un descuento:
               </label>
@@ -54,7 +54,7 @@ const Cart = ({ cart, deleteProductById, totalQuantity, total, clearCart }) => {
                 <option value={50}>50%</option>
                 <option value={80}>80%</option>
               </select>
-            </div>
+            </div> */}
 
             <h2 className="lg:text-2xl font-semibold mb-3 text-center">
               Total de productos: {totalQuantity}
