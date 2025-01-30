@@ -14,13 +14,13 @@ const ProductCard = ({ id, title, price, stock, imageUrl, category }) => {
 
   return (
     <div className="card card-side md:card card-compact bg-base-100 w-64 md:w-72 shadow-xl">
-      <figure className="w-full flex justify-center items-center">
+      {/* <figure className="w-full flex justify-center items-center">
         <img
           src={imageUrl}
           alt={title}
           className="object-contain w-32 h-32 md:w-40 md:h-40"
         />
-      </figure>
+      </figure> */}
       <div className="card-body">
         <h2 className="card-title text-lg xl:text-xl">{title}</h2>
         <p className="font-bold xl:text-lg">${price} Pesos</p>
