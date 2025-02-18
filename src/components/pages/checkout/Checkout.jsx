@@ -20,8 +20,6 @@ const Checkout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [dailySales, setDailySales] = useState([]);
   const [totalSalesByMonth, setTotalSalesByMonth] = useState({}); // Total de ventas por mes
-  const [totalSalesByDay, setTotalSalesByDay] = useState(0); // Total de ventas por día con filtro de método de pago
-  const [salesByPaymentMethod, setSalesByPaymentMethod] = useState({}); // Ventas por método de pago
   const [last15DaysSales, setLast15DaysSales] = useState([]); // Ventas de los últimos 15 días
   const [selectedDiscount, setSelectedDiscount] = useState(0); // Descuento seleccionado
 
@@ -83,39 +81,6 @@ const Checkout = () => {
     }
   };
 
-  // Obtener ventas por método de pago
-  const getSalesByPayment = async () => {
-    const salesRef = collection(db, "orders");
-
-    const paymentMethods = [
-      "Efectivo",
-      "Posnet",
-      "Galicia QR",
-      "Cuenta DNI",
-      "Mercado Pago Yami",
-    ];
-
-    let salesByPayment = {};
-    for (let method of paymentMethods) {
-      const paymentQuery = query(
-        salesRef,
-        where("paymentMethod", "==", method),
-        orderBy("createdAt", "desc")
-      );
-
-      const paymentSnapshot = await getDocs(paymentQuery);
-      const paymentSalesData = paymentSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      const total = paymentSalesData.reduce((acc, sale) => acc + sale.total, 0);
-      salesByPayment[method] = total;
-    }
-
-    setSalesByPaymentMethod(salesByPayment);
-  };
-
   // Obtener el total de ventas por mes
   const getSalesByMonth = async () => {
     const salesRef = collection(db, "orders");
@@ -143,24 +108,8 @@ const Checkout = () => {
     setTotalSalesByMonth(totals);
   };
 
-  // Obtener las ventas totales por día con el filtro de método de pago
-  const handlePaymentFilter = (paymentMethod) => {
-    setSelectedPaymentMethod(paymentMethod);
-
-    const filteredSales = dailySales.filter(
-      (sale) => sale.paymentMethod === paymentMethod
-    );
-
-    const totalFilteredSales = filteredSales.reduce(
-      (acc, sale) => acc + sale.total,
-      0
-    );
-    setTotalSalesByDay(totalFilteredSales);
-  };
-
   useEffect(() => {
     getSales();
-    getSalesByPayment();
     getSalesByMonth();
   }, []);
 
@@ -221,10 +170,19 @@ const Checkout = () => {
   const discountAmount = totalAmount * (selectedDiscount / 100);
   const totalWithDiscount = totalAmount - discountAmount;
 
-  // Calcular el total de ventas por día
-  const totalSalesToday = useMemo(() => {
-    return dailySales.reduce((acc, sale) => acc + sale.total, 0);
-  }, [dailySales]);
+  // Filtrado de ventas por método de pago en los últimos 15 días
+  const filteredSales = useMemo(() => {
+    if (!selectedPaymentMethod) return last15DaysSales;
+    return last15DaysSales.filter(
+      (sale) => sale.paymentMethod === selectedPaymentMethod
+    );
+  }, [selectedPaymentMethod, last15DaysSales]);
+
+  // Calcular el total de ventas del día
+  const totalDailySales = dailySales.reduce(
+    (total, sale) => total + sale.total,
+    0
+  );
 
   if (isLoading) {
     return <h2>cargando...</h2>;
@@ -262,7 +220,7 @@ const Checkout = () => {
                 <label className="input input-bordered flex items-center gap-2 my-1">
                   <select
                     name="paymentMethod"
-                    onChange={(e) => handlePaymentFilter(e.target.value)}
+                    onChange={handleChange}
                     value={selectedPaymentMethod}
                     className="input input-bordered"
                   >
@@ -310,6 +268,7 @@ const Checkout = () => {
             <table className="table w-full">
               <thead>
                 <tr>
+                  <th>Fecha</th>
                   <th>Hora</th>
                   <th>Vendedor</th>
                   <th>Método de Pago</th>
@@ -319,10 +278,15 @@ const Checkout = () => {
                 </tr>
               </thead>
               <tbody>
-                {last15DaysSales
+                {filteredSales
                   .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds) // Ordenar por fecha
                   .map((sale) => (
                     <tr key={sale.id}>
+                      <td>
+                        {new Date(
+                          sale.createdAt.seconds * 1000
+                        ).toLocaleDateString()}
+                      </td>
                       <td>
                         {new Date(
                           sale.createdAt.seconds * 1000
@@ -355,9 +319,50 @@ const Checkout = () => {
           ))}
         </div>
 
-        <h2 className="text-xl font-semibold mt-4">Ventas Totales del Día</h2>
-        <div>
-          {totalSalesToday ? `$${totalSalesToday.toFixed(2)}` : "$0.00"}
+        {/* Total de ventas del día */}
+        <div className="my-4">
+          <h2 className="text-xl font-semibold">Ventas Totales del Día</h2>
+          <p>${totalDailySales.toFixed(2)}</p>
+        </div>
+
+        {/* Botones de filtrado dentro del detalle de los últimos 15 días */}
+        <div className="my-4">
+          <button
+            className="btn btn-secondary mx-2"
+            onClick={() => setSelectedPaymentMethod("Efectivo")}
+          >
+            Filtrar por Efectivo
+          </button>
+          <button
+            className="btn btn-secondary mx-2"
+            onClick={() => setSelectedPaymentMethod("Posnet")}
+          >
+            Filtrar por Posnet
+          </button>
+          <button
+            className="btn btn-secondary mx-2"
+            onClick={() => setSelectedPaymentMethod("Galicia QR")}
+          >
+            Filtrar por Galicia QR
+          </button>
+          <button
+            className="btn btn-secondary mx-2"
+            onClick={() => setSelectedPaymentMethod("Cuenta DNI")}
+          >
+            Filtrar por Cuenta DNI
+          </button>
+          <button
+            className="btn btn-secondary mx-2"
+            onClick={() => setSelectedPaymentMethod("Mercado Pago Yami")}
+          >
+            Filtrar por Mercado Pago Yami
+          </button>
+          <button
+            className="btn btn-secondary mx-2"
+            onClick={() => setSelectedPaymentMethod("")} // Limpiar el filtro
+          >
+            Limpiar Filtro
+          </button>
         </div>
       </div>
     </div>
