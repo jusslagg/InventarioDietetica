@@ -321,7 +321,7 @@ const Checkout = () => {
           {Object.keys(salesByPaymentMethod).map((method) => (
             <div key={method}>
               <p>
-                {method}: ${salesByPaymentMethod[method]}
+                {method}: ${salesByPaymentMethod[method].toFixed(2)}
               </p>
             </div>
           ))}
@@ -337,7 +337,7 @@ const Checkout = () => {
           {Object.keys(totalSalesByMonth).map((month) => (
             <div key={month}>
               <p>
-                {month}: ${totalSalesByMonth[month]}
+                {month}: ${totalSalesByMonth[month].toFixed(2)}
               </p>
             </div>
           ))}
@@ -357,7 +357,7 @@ const Checkout = () => {
                   <strong>Método de pago:</strong> {sale.paymentMethod}
                 </p>
                 <p>
-                  <strong>Total:</strong> ${sale.total}
+                  <strong>Total:</strong> ${sale.total.toFixed(2)}
                 </p>
                 <p>
                   <strong>Fecha:</strong>{" "}
@@ -378,7 +378,7 @@ const Checkout = () => {
                       <strong>Cantidad:</strong> {item.quantity}
                     </p>
                     <p>
-                      <strong>Precio unitario:</strong> ${item.price}
+                      <strong>Precio unitario:</strong> ${item.price.toFixed(2)}
                     </p>
                   </li>
                 ))}
