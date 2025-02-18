@@ -163,6 +163,8 @@ const Checkout = () => {
       setSelectedSeller(value);
     } else if (name === "discount") {
       setSelectedDiscount(Number(value));
+    } else if (name === "paymentMethod") {
+      setSelectedPaymentMethod(value); // Guardar el método de pago
     }
   };
 
