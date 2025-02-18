@@ -314,7 +314,6 @@ const Checkout = () => {
             value={selectedDate}
             className="input input-bordered w-full"
           />
-          {/* Mostrar las ventas del día seleccionado */}
         </div>
 
         <div className="w-1/3">
@@ -349,19 +348,38 @@ const Checkout = () => {
         <h2 className="text-xl font-semibold">Ventas del Día</h2>
         <ul>
           {dailySales.map((sale) => (
-            <li key={sale.id}>
-              <p>Vendedora: {sale.seller}</p>
-              <p>Método de pago: {sale.paymentMethod}</p>
-              <p>Total: ${sale.total}</p>
-              <p>Fecha: {sale.createdAt.toDate().toLocaleString()}</p>
-              <h3>Productos comprados:</h3>
-              <ul>
+            <li key={sale.id} className="border p-4 mb-4 rounded-lg">
+              <div className="mb-2">
+                <p>
+                  <strong>Vendedora:</strong> {sale.seller}
+                </p>
+                <p>
+                  <strong>Método de pago:</strong> {sale.paymentMethod}
+                </p>
+                <p>
+                  <strong>Total:</strong> ${sale.total}
+                </p>
+                <p>
+                  <strong>Fecha:</strong>{" "}
+                  {sale.createdAt.toDate().toLocaleString()}
+                </p>
+              </div>
+              <h3 className="font-semibold">Productos comprados:</h3>
+              <ul className="pl-4">
                 {sale.items.map((item) => (
-                  <li key={item.id}>
-                    <p>Producto: {item.title}</p>
-                    <p>Categoría: {item.category}</p>
-                    <p>Cantidad: {item.quantity}</p>
-                    <p>Precio unitario: ${item.price}</p>
+                  <li key={item.id} className="mb-2">
+                    <p>
+                      <strong>Producto:</strong> {item.title}
+                    </p>
+                    <p>
+                      <strong>Categoría:</strong> {item.category}
+                    </p>
+                    <p>
+                      <strong>Cantidad:</strong> {item.quantity}
+                    </p>
+                    <p>
+                      <strong>Precio unitario:</strong> ${item.price}
+                    </p>
                   </li>
                 ))}
               </ul>
