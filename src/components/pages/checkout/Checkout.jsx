@@ -229,6 +229,14 @@ const Checkout = () => {
     return totals;
   }, [last30DaysSales]);
 
+  // Calcular el total de ventas del día
+  const totalSalesToday = useMemo(() => {
+    return Object.values(totalSalesByDay).reduce(
+      (acc, total) => acc + total,
+      0
+    );
+  }, [totalSalesByDay]);
+
   if (isLoading) {
     return <h2>cargando...</h2>;
   }
@@ -304,6 +312,12 @@ const Checkout = () => {
           </div>
         </div>
       )}
+
+      {/* Mostrar el total de ventas del día */}
+      <div className="my-8">
+        <h2 className="text-xl font-semibold">Ventas del Día</h2>
+        <p>${totalSalesToday.toFixed(2)}</p>
+      </div>
 
       <div className="flex justify-between mt-8">
         <div className="w-1/3">
