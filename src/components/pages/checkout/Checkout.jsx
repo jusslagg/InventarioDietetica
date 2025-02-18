@@ -15,23 +15,24 @@ import { db } from "../../../configFirebase";
 
 const Checkout = () => {
   const [selectedSeller, setSelectedSeller] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // Nuevo estado para el método de pago
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // Método de pago
   const [orderId, setOrderId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [dailySales, setDailySales] = useState([]);
-  const [last30DaysSales, setLast30DaysSales] = useState([]);
-  const [totalSalesMonth, setTotalSalesMonth] = useState(0); // Total de ventas por mes
-  const [selectedDate, setSelectedDate] = useState(""); // Estado para fecha seleccionada
+  const [totalSalesByMonth, setTotalSalesByMonth] = useState({}); // Total de ventas por mes
+  const [totalSalesByDay, setTotalSalesByDay] = useState(0); // Total de ventas por día con filtro de método de pago
   const [salesByPaymentMethod, setSalesByPaymentMethod] = useState({}); // Ventas por método de pago
-  const [selectedDiscount, setSelectedDiscount] = useState(0); // Estado para el descuento seleccionado
+  const [last15DaysSales, setLast15DaysSales] = useState([]); // Ventas de los últimos 15 días
+  const [selectedDiscount, setSelectedDiscount] = useState(0); // Descuento seleccionado
 
   const { cart, getTotalAmount, clearCart } = useContext(CartContext);
 
-  // Función para obtener las ventas de los últimos 30 días y ventas diarias
+  // Obtener ventas
   const getSales = async () => {
     const today = new Date();
     const startOfDay = new Date(today.setHours(0, 0, 0, 0)); // Inicio de hoy
     const startOf30DaysAgo = new Date(today.setDate(today.getDate() - 30)); // Hace 30 días
+    const startOf15DaysAgo = new Date(today.setDate(today.getDate() - 15)); // Hace 15 días
 
     // Consultas para obtener las ventas
     const salesRef = collection(db, "orders");
@@ -40,6 +41,13 @@ const Checkout = () => {
     const dailyQuery = query(
       salesRef,
       where("createdAt", ">=", startOfDay),
+      orderBy("createdAt", "desc")
+    );
+
+    // Ventas de los últimos 15 días
+    const last15DaysQuery = query(
+      salesRef,
+      where("createdAt", ">=", startOf15DaysAgo),
       orderBy("createdAt", "desc")
     );
 
@@ -52,9 +60,14 @@ const Checkout = () => {
 
     try {
       const dailySnapshot = await getDocs(dailyQuery);
+      const last15DaysSnapshot = await getDocs(last15DaysQuery);
       const last30DaysSnapshot = await getDocs(last30DaysQuery);
 
       const dailySalesData = dailySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const last15DaysSalesData = last15DaysSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
@@ -64,38 +77,13 @@ const Checkout = () => {
       }));
 
       setDailySales(dailySalesData);
-      setLast30DaysSales(last30DaysSalesData);
+      setLast15DaysSales(last15DaysSalesData);
     } catch (error) {
       console.error("Error al obtener las ventas:", error);
     }
   };
 
-  // Función para obtener el total de ventas acumuladas por mes
-  const getSalesByMonth = async (month) => {
-    const salesRef = collection(db, "orders");
-
-    const monthStart = new Date(month);
-    const monthEnd = new Date(monthStart);
-    monthEnd.setMonth(monthEnd.getMonth() + 1); // Fin del mes seleccionado
-
-    const monthQuery = query(
-      salesRef,
-      where("createdAt", ">=", monthStart),
-      where("createdAt", "<", monthEnd),
-      orderBy("createdAt", "desc")
-    );
-
-    const monthSnapshot = await getDocs(monthQuery);
-    const monthSalesData = monthSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    const total = monthSalesData.reduce((acc, sale) => acc + sale.total, 0);
-    setTotalSalesMonth(total);
-  };
-
-  // Función para obtener ventas por método de pago
+  // Obtener ventas por método de pago
   const getSalesByPayment = async () => {
     const salesRef = collection(db, "orders");
 
@@ -106,8 +94,8 @@ const Checkout = () => {
       "Cuenta DNI",
       "Mercado Pago Yami",
     ];
-    let salesByPayment = {};
 
+    let salesByPayment = {};
     for (let method of paymentMethods) {
       const paymentQuery = query(
         salesRef,
@@ -128,9 +116,52 @@ const Checkout = () => {
     setSalesByPaymentMethod(salesByPayment);
   };
 
+  // Obtener el total de ventas por mes
+  const getSalesByMonth = async () => {
+    const salesRef = collection(db, "orders");
+
+    const monthQuery = query(salesRef, orderBy("createdAt", "desc"));
+    const monthSnapshot = await getDocs(monthQuery);
+
+    const salesData = monthSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const totals = salesData.reduce((acc, sale) => {
+      const month = new Date(sale.createdAt.seconds * 1000).toLocaleString(
+        "default",
+        { year: "numeric", month: "long" }
+      );
+      if (!acc[month]) {
+        acc[month] = 0;
+      }
+      acc[month] += sale.total;
+      return acc;
+    }, {});
+
+    setTotalSalesByMonth(totals);
+  };
+
+  // Obtener las ventas totales por día con el filtro de método de pago
+  const handlePaymentFilter = (paymentMethod) => {
+    setSelectedPaymentMethod(paymentMethod);
+
+    const filteredSales = dailySales.filter(
+      (sale) => sale.paymentMethod === paymentMethod
+    );
+
+    const totalFilteredSales = filteredSales.reduce(
+      (acc, sale) => acc + sale.total,
+      0
+    );
+    setTotalSalesByDay(totalFilteredSales);
+  };
+
   useEffect(() => {
     getSales();
     getSalesByPayment();
+    getSalesByMonth();
   }, []);
 
   const handleSubmit = (e) => {
@@ -181,20 +212,9 @@ const Checkout = () => {
     const { value, name } = e.target;
     if (name === "seller") {
       setSelectedSeller(value);
-    } else if (name === "paymentMethod") {
-      setSelectedPaymentMethod(value);
     } else if (name === "discount") {
       setSelectedDiscount(Number(value));
     }
-  };
-
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
-  };
-
-  const handleMonthChange = (e) => {
-    const month = new Date(e.target.value);
-    getSalesByMonth(month);
   };
 
   const totalAmount = getTotalAmount();
@@ -202,204 +222,143 @@ const Checkout = () => {
   const totalWithDiscount = totalAmount - discountAmount;
 
   // Calcular el total de ventas por día
-  const totalSalesByDay = useMemo(() => {
-    const totals = {};
-    dailySales.forEach((sale) => {
-      const date = sale.createdAt.toDate().toLocaleDateString();
-      if (!totals[date]) {
-        totals[date] = 0;
-      }
-      totals[date] += sale.total;
-    });
-    return totals;
-  }, [dailySales]);
-
-  // Calcular el total de ventas por mes
-  const totalSalesByMonth = useMemo(() => {
-    const totals = {};
-    last30DaysSales.forEach((sale) => {
-      const month = sale.createdAt
-        .toDate()
-        .toLocaleString("default", { month: "long", year: "numeric" });
-      if (!totals[month]) {
-        totals[month] = 0;
-      }
-      totals[month] += sale.total;
-    });
-    return totals;
-  }, [last30DaysSales]);
-
-  // Calcular el total de ventas del día
   const totalSalesToday = useMemo(() => {
-    return Object.values(totalSalesByDay).reduce(
-      (acc, total) => acc + total,
-      0
-    );
-  }, [totalSalesByDay]);
+    return dailySales.reduce((acc, sale) => acc + sale.total, 0);
+  }, [dailySales]);
 
   if (isLoading) {
     return <h2>cargando...</h2>;
   }
 
   return (
-    <div className="h-dvh">
-      {orderId ? (
-        <h1>Gracias por tu compra, tu orden es: {orderId}</h1>
-      ) : (
-        <div className="h-fit my-4 flex justify-center">
-          <div className="card bg-base-100 w-96 shadow-xl p-2 mx-1">
-            <div className="card-title">
-              <h1>Proceso de compra</h1>
+    <div className="h-dvh flex">
+      <div className="w-3/4">
+        {orderId ? (
+          <h1>Gracias por tu compra, tu orden es: {orderId}</h1>
+        ) : (
+          <div className="h-fit my-4 flex justify-center">
+            <div className="card bg-base-100 w-96 shadow-xl p-2 mx-1">
+              <div className="card-title">
+                <h1>Proceso de compra</h1>
+              </div>
+              <form onSubmit={handleSubmit}>
+                <label className="input input-bordered flex items-center gap-2 my-1">
+                  <select
+                    name="seller"
+                    onChange={handleChange}
+                    value={selectedSeller}
+                    className="input input-bordered"
+                  >
+                    <option value="" disabled>
+                      Selecciona una vendedora
+                    </option>
+                    <option value="Yamila Gonzalez">Yamila Gonzalez</option>
+                    <option value="Daniela Urbina">Daniela Urbina</option>
+                    <option value="Mirna Gallardo">Mirna Gallardo</option>
+                    <option value="Otros">Otros</option>
+                  </select>
+                </label>
+
+                <label className="input input-bordered flex items-center gap-2 my-1">
+                  <select
+                    name="paymentMethod"
+                    onChange={(e) => handlePaymentFilter(e.target.value)}
+                    value={selectedPaymentMethod}
+                    className="input input-bordered"
+                  >
+                    <option value="">Selecciona un método de pago</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Posnet">Posnet</option>
+                    <option value="Galicia QR">Galicia QR</option>
+                    <option value="Cuenta DNI">Cuenta DNI</option>
+                    <option value="Mercado Pago Yami">Mercado Pago Yami</option>
+                  </select>
+                </label>
+
+                <label className="input input-bordered flex items-center gap-2 my-1">
+                  <select
+                    name="discount"
+                    onChange={handleChange}
+                    value={selectedDiscount}
+                    className="input input-bordered"
+                  >
+                    <option value={0}>Sin descuento</option>
+                    <option value={10}>10% de descuento</option>
+                    <option value={20}>20% de descuento</option>
+                    <option value={30}>30% de descuento</option>
+                  </select>
+                </label>
+
+                <div className="my-4">
+                  <h2>Total a pagar: ${totalWithDiscount.toFixed(2)}</h2>
+                </div>
+
+                <div className="card-actions justify-end">
+                  <button className="btn btn-primary">Comprar</button>
+                </div>
+              </form>
             </div>
-            <form onSubmit={handleSubmit}>
-              <label className="input input-bordered flex items-center gap-2 my-1">
-                <select
-                  name="seller"
-                  onChange={handleChange}
-                  value={selectedSeller}
-                  className="input input-bordered"
-                >
-                  <option value="" disabled>
-                    Selecciona una vendedora
-                  </option>
-                  <option value="Yamila Gonzalez">Yamila Gonzalez</option>
-                  <option value="Daniela Urbina">Daniela Urbina</option>
-                  <option value="Mirna Gallardo">Mirna Gallardo</option>
-                  <option value="Otros">Otros</option>
-                </select>
-              </label>
+          </div>
+        )}
 
-              <label className="input input-bordered flex items-center gap-2 my-1">
-                <select
-                  name="paymentMethod"
-                  onChange={handleChange}
-                  value={selectedPaymentMethod}
-                  className="input input-bordered"
-                >
-                  <option value="" disabled>
-                    Selecciona un método de pago
-                  </option>
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Posnet">Posnet</option>
-                  <option value="Galicia QR">Galicia QR</option>
-                  <option value="Cuenta DNI">Cuenta DNI</option>
-                  <option value="Mercado Pago Yami">Mercado Pago Yami</option>
-                </select>
-              </label>
-
-              <label className="input input-bordered flex items-center gap-2 my-1">
-                <select
-                  name="discount"
-                  onChange={handleChange}
-                  value={selectedDiscount}
-                  className="input input-bordered"
-                >
-                  <option value={0}>Sin descuento</option>
-                  <option value={10}>10% de descuento</option>
-                  <option value={20}>20% de descuento</option>
-                  <option value={30}>30% de descuento</option>
-                </select>
-              </label>
-
-              <div className="my-4">
-                <h2>Total a pagar: ${totalWithDiscount.toFixed(2)}</h2>
-              </div>
-
-              <div className="card-actions justify-end">
-                <button className="btn btn-primary">Comprar</button>
-              </div>
-            </form>
+        {/* Registro de ventas de los últimos 15 días */}
+        <div className="my-8">
+          <h2 className="text-xl font-semibold">
+            Ventas de los Últimos 15 Días
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="table w-full">
+              <thead>
+                <tr>
+                  <th>Hora</th>
+                  <th>Vendedor</th>
+                  <th>Método de Pago</th>
+                  <th>Total</th>
+                  <th>Cantidad</th>
+                  <th>Producto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {last15DaysSales
+                  .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds) // Ordenar por fecha
+                  .map((sale) => (
+                    <tr key={sale.id}>
+                      <td>
+                        {new Date(
+                          sale.createdAt.seconds * 1000
+                        ).toLocaleTimeString()}
+                      </td>
+                      <td>{sale.seller}</td>
+                      <td>{sale.paymentMethod}</td>
+                      <td>${sale.total.toFixed(2)}</td>
+                      {sale.items.map((item, index) => (
+                        <td key={index}>
+                          {item.quantity} x {item.title}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
-
-      {/* Mostrar el total de ventas del día */}
-      <div className="my-8">
-        <h2 className="text-xl font-semibold">Ventas del Día</h2>
-        <p>${totalSalesToday.toFixed(2)}</p>
       </div>
 
-      <div className="flex justify-between mt-8">
-        <div className="w-1/3">
-          <h2 className="text-xl font-semibold">Ventas por Fecha</h2>
-          <input
-            type="date"
-            onChange={handleDateChange}
-            value={selectedDate}
-            className="input input-bordered w-full"
-          />
-        </div>
-
-        <div className="w-1/3">
-          <h2 className="text-xl font-semibold">Ventas por Método de Pago</h2>
-          {Object.keys(salesByPaymentMethod).map((method) => (
-            <div key={method}>
-              <p>
-                {method}: ${salesByPaymentMethod[method].toFixed(2)}
-              </p>
-            </div>
+      {/* Total de ventas por mes */}
+      <div className="w-1/4 p-4">
+        <h2 className="text-xl font-semibold">Ventas Totales por Mes</h2>
+        <div>
+          {Object.entries(totalSalesByMonth).map(([month, total]) => (
+            <p key={month}>
+              {month}: ${total.toFixed(2)}
+            </p>
           ))}
         </div>
 
-        <div className="w-1/3">
-          <h2 className="text-xl font-semibold">Ventas por Mes</h2>
-          <input
-            type="month"
-            onChange={handleMonthChange}
-            className="input input-bordered w-full"
-          />
-          {Object.keys(totalSalesByMonth).map((month) => (
-            <div key={month}>
-              <p>
-                {month}: ${totalSalesByMonth[month].toFixed(2)}
-              </p>
-            </div>
-          ))}
+        <h2 className="text-xl font-semibold mt-4">Ventas Totales del Día</h2>
+        <div>
+          {totalSalesToday ? `$${totalSalesToday.toFixed(2)}` : "$0.00"}
         </div>
-      </div>
-
-      <div className="my-8">
-        <h2 className="text-xl font-semibold">Ventas del Día</h2>
-        <ul>
-          {dailySales.map((sale) => (
-            <li key={sale.id} className="border p-4 mb-4 rounded-lg">
-              <div className="mb-2">
-                <p>
-                  <strong>Vendedora:</strong> {sale.seller}
-                </p>
-                <p>
-                  <strong>Método de pago:</strong> {sale.paymentMethod}
-                </p>
-                <p>
-                  <strong>Total:</strong> ${sale.total.toFixed(2)}
-                </p>
-                <p>
-                  <strong>Fecha:</strong>{" "}
-                  {sale.createdAt.toDate().toLocaleString()}
-                </p>
-              </div>
-              <h3 className="font-semibold">Productos comprados:</h3>
-              <ul className="pl-4">
-                {sale.items.map((item) => (
-                  <li key={item.id} className="mb-2">
-                    <p>
-                      <strong>Producto:</strong> {item.title}
-                    </p>
-                    <p>
-                      <strong>Categoría:</strong> {item.category}
-                    </p>
-                    <p>
-                      <strong>Cantidad:</strong> {item.quantity}
-                    </p>
-                    <p>
-                      <strong>Precio unitario:</strong> ${item.price.toFixed(2)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );
