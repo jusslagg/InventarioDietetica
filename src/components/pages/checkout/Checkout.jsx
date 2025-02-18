@@ -143,7 +143,15 @@ const Checkout = () => {
     const order = {
       seller: selectedSeller,
       paymentMethod: selectedPaymentMethod, // Guardar el método de pago
-      items: cart,
+      items: cart.map((item) => ({
+        id: item.id,
+        title: item.title,
+        category: item.category,
+        imageUrl: item.imageUrl,
+        price: item.price,
+        quantity: item.quantity,
+        stock: item.stock,
+      })),
       total: total,
       createdAt: serverTimestamp(), // Agregar la fecha de la venta
     };
@@ -327,39 +335,18 @@ const Checkout = () => {
             onChange={handleMonthChange}
             className="input input-bordered w-full"
           />
-          <p>Total ventas: ${totalSalesMonth}</p>
+          {Object.keys(totalSalesByMonth).map((month) => (
+            <div key={month}>
+              <p>
+                {month}: ${totalSalesByMonth[month]}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Mostrar total de ventas por día */}
       <div className="my-8">
-        <h2 className="text-xl font-semibold">Total de ventas por día</h2>
-        <ul>
-          {Object.entries(totalSalesByDay).map(([date, total]) => (
-            <li key={date}>
-              <p>Fecha: {date}</p>
-              <p>Total: ${total.toFixed(2)}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Mostrar total de ventas por mes */}
-      <div className="my-8">
-        <h2 className="text-xl font-semibold">Total de ventas por mes</h2>
-        <ul>
-          {Object.entries(totalSalesByMonth).map(([month, total]) => (
-            <li key={month}>
-              <p>Mes: {month}</p>
-              <p>Total: ${total.toFixed(2)}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Mostrar ventas del día */}
-      <div className="my-8">
-        <h2 className="text-xl font-semibold">Ventas del día</h2>
+        <h2 className="text-xl font-semibold">Ventas del Día</h2>
         <ul>
           {dailySales.map((sale) => (
             <li key={sale.id}>
@@ -367,21 +354,17 @@ const Checkout = () => {
               <p>Método de pago: {sale.paymentMethod}</p>
               <p>Total: ${sale.total}</p>
               <p>Fecha: {sale.createdAt.toDate().toLocaleString()}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Mostrar ventas de los últimos 30 días */}
-      <div className="my-8">
-        <h2 className="text-xl font-semibold">Ventas de los últimos 30 días</h2>
-        <ul>
-          {last30DaysSales.map((sale) => (
-            <li key={sale.id}>
-              <p>Vendedora: {sale.seller}</p>
-              <p>Método de pago: {sale.paymentMethod}</p>
-              <p>Total: ${sale.total}</p>
-              <p>Fecha: {sale.createdAt.toDate().toLocaleString()}</p>
+              <h3>Productos comprados:</h3>
+              <ul>
+                {sale.items.map((item) => (
+                  <li key={item.id}>
+                    <p>Producto: {item.title}</p>
+                    <p>Categoría: {item.category}</p>
+                    <p>Cantidad: {item.quantity}</p>
+                    <p>Precio unitario: ${item.price}</p>
+                  </li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>
