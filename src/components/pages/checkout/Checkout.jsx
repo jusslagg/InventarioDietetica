@@ -184,6 +184,23 @@ const Checkout = () => {
     0
   );
 
+  // Filtrar solo las ventas del día (para mostrar el total filtrado por día)
+  const filteredSalesToday = filteredSales.filter((sale) => {
+    const saleDate = new Date(sale.createdAt.seconds * 1000);
+    const today = new Date();
+    return (
+      saleDate.getDate() === today.getDate() &&
+      saleDate.getMonth() === today.getMonth() &&
+      saleDate.getFullYear() === today.getFullYear()
+    );
+  });
+
+  // Calcular el total de ventas filtradas solo para hoy
+  const totalFilteredSalesToday = filteredSalesToday.reduce(
+    (total, sale) => total + sale.total,
+    0
+  );
+
   if (isLoading) {
     return <h2>cargando...</h2>;
   }
@@ -363,6 +380,14 @@ const Checkout = () => {
           >
             Limpiar Filtro
           </button>
+        </div>
+
+        {/* Cuadro con total del día filtrado */}
+        <div className="my-4 p-4 border border-gray-300 rounded-md bg-gray-50">
+          <h3 className="font-semibold">Total de ventas del día filtrado:</h3>
+          <p className="text-xl font-bold">
+            ${totalFilteredSalesToday.toFixed(2)}
+          </p>
         </div>
       </div>
     </div>
