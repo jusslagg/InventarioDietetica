@@ -12,6 +12,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../../configFirebase";
+import Swal from "sweetalert2"; // Importa SweetAlert2
 
 const Checkout = () => {
   const [selectedSeller, setSelectedSeller] = useState("");
@@ -22,6 +23,7 @@ const Checkout = () => {
   const [totalSalesByMonth, setTotalSalesByMonth] = useState({}); // Total de ventas por mes
   const [last15DaysSales, setLast15DaysSales] = useState([]); // Ventas de los últimos 15 días
   const [selectedDiscount, setSelectedDiscount] = useState(0); // Descuento seleccionado
+  const [isAuthorized, setIsAuthorized] = useState(false); // Estado de autorización
 
   const { cart, getTotalAmount, clearCart } = useContext(CartContext);
 
@@ -203,6 +205,23 @@ const Checkout = () => {
     0
   );
 
+  const handleUnlockSales = () => {
+    Swal.fire({
+      title: "Ingresa la clave",
+      input: "password",
+      inputPlaceholder: "Introduce la clave",
+      showCancelButton: true,
+      confirmButtonText: "Aceptar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed && result.value === "camicam1") {
+        setIsAuthorized(true); // Habilitar acceso a ventas por mes
+      } else {
+        Swal.fire("Clave incorrecta", "", "error");
+      }
+    });
+  };
+
   if (isLoading) {
     return <h2>cargando...</h2>;
   }
@@ -331,11 +350,17 @@ const Checkout = () => {
       <div className="w-1/4 p-4">
         <h2 className="text-xl font-semibold">Ventas Totales por Mes</h2>
         <div>
-          {Object.entries(totalSalesByMonth).map(([month, total]) => (
-            <p key={month}>
-              {month}: ${total.toFixed(2)}
-            </p>
-          ))}
+          {isAuthorized ? (
+            Object.entries(totalSalesByMonth).map(([month, total]) => (
+              <p key={month}>
+                {month}: ${total.toFixed(2)}
+              </p>
+            ))
+          ) : (
+            <button onClick={handleUnlockSales} className="btn btn-primary">
+              Ver Ventas por Mes
+            </button>
+          )}
         </div>
 
         {/* Total de ventas del día */}
