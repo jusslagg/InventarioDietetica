@@ -11,18 +11,20 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "../../../configFirebase";
+import Swal from "sweetalert2"; // Importar SweetAlert
 
 const ItemListContainer = () => {
   const [items, setItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]); // Estado para los productos filtrados
+  const [filteredItems, setFilteredItems] = useState([]);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newPrice, setNewPrice] = useState(""); // Estado para el nuevo precio
+  const [newPrice, setNewPrice] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState(""); // Estado para la nueva imagen
   const [stockOriginal, setStockOriginal] = useState(0);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { categoryName } = useParams();
 
@@ -41,16 +43,14 @@ const ItemListContainer = () => {
         stock: Number(doc.data().stock),
       }));
       setItems(fetchedItems);
-      setFilteredItems(fetchedItems); // Inicialmente, los productos filtrados son todos los productos
+      setFilteredItems(fetchedItems);
     });
   }, [categoryName]);
 
-  // Función para manejar el cambio en el campo de búsqueda
   const handleSearchChange = (e) => {
     const searchTerm = e.target.value.toLowerCase();
     setSearchTerm(searchTerm);
 
-    // Filtrar los productos en base al término de búsqueda
     const filtered = items.filter((item) => {
       const title = item.title ? item.title.toLowerCase() : "";
       const category = item.category ? item.category.toLowerCase() : "";
@@ -60,13 +60,32 @@ const ItemListContainer = () => {
     setFilteredItems(filtered);
   };
 
-  // Función para agregar productos
   const agregarProducto = async (e) => {
     e.preventDefault();
 
+    // Verificación de si ya existe el producto
     if (items.some((item) => item.title === newTitle)) {
       alert("Este producto ya existe en la base de datos.");
       return;
+    }
+
+    // Solicitar contraseña antes de agregar
+    const { value: password } = await Swal.fire({
+      title: "Ingrese la contraseña",
+      input: "password",
+      inputPlaceholder: "Contraseña",
+      showCancelButton: true,
+      cancelButtonText: "Cancelar",
+      confirmButtonText: "Aceptar",
+      inputValidator: (value) => {
+        if (value !== "camicam1") {
+          return "Contraseña incorrecta";
+        }
+      },
+    });
+
+    if (password !== "camicam1") {
+      return; // Si la contraseña es incorrecta, no continuar
     }
 
     try {
@@ -75,6 +94,7 @@ const ItemListContainer = () => {
         stock: Number(newStock),
         category: newCategory,
         price: Number(newPrice),
+        imageUrl: newImageUrl, // Agregar el imageUrl
       });
       alert("Producto agregado exitosamente.");
 
@@ -82,6 +102,7 @@ const ItemListContainer = () => {
       setNewStock("");
       setNewCategory("");
       setNewPrice("");
+      setNewImageUrl(""); // Limpiar el campo de imagen
 
       const updatedItems = [
         ...items,
@@ -90,16 +111,16 @@ const ItemListContainer = () => {
           stock: Number(newStock),
           category: newCategory,
           price: Number(newPrice),
+          imageUrl: newImageUrl,
         },
       ];
       setItems(updatedItems);
-      setFilteredItems(updatedItems); // Actualizar los productos filtrados
+      setFilteredItems(updatedItems);
     } catch (error) {
       console.error("Error al agregar el producto:", error);
     }
   };
 
-  // Función para editar un producto
   const editarProducto = async (e) => {
     e.preventDefault();
 
@@ -114,24 +135,36 @@ const ItemListContainer = () => {
 
     const updatedData = {};
 
-    if (newStock) {
-      if (newStock > currentStock) {
-        updatedData.stock = Number(newStock);
-      } else {
-        alert("El stock no puede ser menor o igual que el valor actual.");
-        return;
-      }
+    // Solicitar contraseña antes de editar
+    const { value: password } = await Swal.fire({
+      title: "Ingrese la contraseña",
+      input: "password",
+      inputPlaceholder: "Contraseña",
+      showCancelButton: true,
+      cancelButtonText: "Cancelar",
+      confirmButtonText: "Aceptar",
+      inputValidator: (value) => {
+        if (value !== "camicam1") {
+          return "Contraseña incorrecta";
+        }
+      },
+    });
+
+    if (password !== "camicam1") {
+      return; // Si la contraseña es incorrecta, no continuar
     }
 
-    if (newPrice) {
-      if (newPrice > currentPrice) {
-        updatedData.price = Number(newPrice);
-      } else {
-        alert("El nuevo precio debe ser mayor que el precio actual.");
-        return;
-      }
+    // Actualizar stock (permite reducir el stock)
+    if (newStock && newStock !== currentStock) {
+      updatedData.stock = Number(newStock);
     }
 
+    // Actualizar precio (permite reducir el precio)
+    if (newPrice && newPrice !== currentPrice) {
+      updatedData.price = Number(newPrice);
+    }
+
+    // Verificar y actualizar otros datos
     if (newTitle) updatedData.title = newTitle;
     if (newCategory) updatedData.category = newCategory;
 
@@ -146,11 +179,12 @@ const ItemListContainer = () => {
       await updateDoc(productRef, updatedData);
       alert("Producto actualizado exitosamente.");
 
+      // Actualizar el estado con los nuevos datos
       const updatedItems = items.map((item) =>
         item.id === selectedItemId ? { ...item, ...updatedData } : item
       );
       setItems(updatedItems);
-      setFilteredItems(updatedItems); // Actualizar los productos filtrados
+      setFilteredItems(updatedItems);
 
       setSelectedItemId("");
       setNewTitle("");
@@ -179,7 +213,6 @@ const ItemListContainer = () => {
 
   return (
     <div className="container mx-auto px-4">
-      {/* Campo de búsqueda */}
       <div className="mb-4">
         <input
           type="text"
@@ -189,7 +222,7 @@ const ItemListContainer = () => {
           className="input input-bordered w-full"
         />
       </div>
-      <ItemList items={filteredItems} /> {/* Mostrar los productos filtrados */}
+      <ItemList items={filteredItems} />
       <div className="mb-4">
         <button
           onClick={() => setShowAddProductForm(!showAddProductForm)}
@@ -257,6 +290,19 @@ const ItemListContainer = () => {
                 />
               </div>
 
+              <div className="mb-4">
+                <label htmlFor="imageUrl" className="block font-medium">
+                  Imagen URL:
+                </label>
+                <input
+                  type="text"
+                  id="imageUrl"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  className="input input-bordered w-full"
+                />
+              </div>
+
               <button type="submit" className="btn btn-primary w-full">
                 Agregar Producto
               </button>
@@ -305,44 +351,6 @@ const ItemListContainer = () => {
                 onChange={(e) => setNewStock(e.target.value)}
                 className="input input-bordered w-full"
               />
-              <button
-                type="button"
-                onClick={async () => {
-                  if (newStock > stockOriginal) {
-                    const productRef = doc(db, "products", selectedItemId);
-                    await updateDoc(productRef, { stock: Number(newStock) });
-                    alert("Stock actualizado exitosamente.");
-                    const updatedItems = items.map((item) =>
-                      item.id === selectedItemId
-                        ? { ...item, stock: Number(newStock) }
-                        : item
-                    );
-                    setItems(updatedItems);
-                    setFilteredItems(updatedItems);
-                    setNewStock("");
-                  } else {
-                    alert(
-                      "El stock no puede ser menor o igual que el valor actual."
-                    );
-                  }
-                }}
-                className="btn btn-primary mt-2"
-              >
-                Actualizar Stock
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="category" className="block font-medium">
-                Nueva Categoría:
-              </label>
-              <input
-                type="text"
-                id="category"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                className="input input-bordered w-full"
-              />
             </div>
 
             <div className="mb-4">
@@ -356,31 +364,6 @@ const ItemListContainer = () => {
                 onChange={(e) => setNewPrice(e.target.value)}
                 className="input input-bordered w-full"
               />
-              <button
-                type="button"
-                onClick={async () => {
-                  if (newPrice > product.price) {
-                    const productRef = doc(db, "products", selectedItemId);
-                    await updateDoc(productRef, { price: Number(newPrice) });
-                    alert("Precio actualizado exitosamente.");
-                    const updatedItems = items.map((item) =>
-                      item.id === selectedItemId
-                        ? { ...item, price: Number(newPrice) }
-                        : item
-                    );
-                    setItems(updatedItems);
-                    setFilteredItems(updatedItems);
-                    setNewPrice("");
-                  } else {
-                    alert(
-                      "El nuevo precio debe ser mayor que el precio actual."
-                    );
-                  }
-                }}
-                className="btn btn-primary mt-2"
-              >
-                Actualizar Precio
-              </button>
             </div>
 
             <button type="submit" className="btn btn-primary">
