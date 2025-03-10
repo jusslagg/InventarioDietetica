@@ -9,23 +9,27 @@ export const CartContextProvider = ({ children }) => {
   const { showAlert } = useAlert();
 
   const addToCart = (product) => {
-    // let exist = cart.find((element) => element.id === product.id)
+    if (product.stock > 0) {
+      // let exist = cart.find((element) => element.id === product.id)
 
-    let exist = cart.some((element) => element.id === product.id); //boolean
+      let exist = cart.some((element) => element.id === product.id); //boolean
 
-    if (exist) {
-      let newArray = cart.map((element) => {
-        if (element.id === product.id) {
-          return { ...element, quantity: product.quantity };
-        } else {
-          return element;
-        }
-      });
-      setCart(newArray);
-      showAlert("Agregado al carrito", "success");
+      if (exist) {
+        let newArray = cart.map((element) => {
+          if (element.id === product.id) {
+            return { ...element, quantity: product.quantity };
+          } else {
+            return element;
+          }
+        });
+        setCart(newArray);
+        showAlert("Agregado al carrito", "success");
+      } else {
+        setCart([...cart, product]);
+        showAlert("Agregado al carrito", "success");
+      }
     } else {
-      setCart([...cart, product]);
-      showAlert("Agregado al carrito", "success");
+      showAlert("No hay stock disponible", "error");
     }
   };
 
