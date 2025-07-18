@@ -282,6 +282,7 @@ const Checkout = () => {
                     <option value={10}>10% de descuento</option>
                     <option value={20}>20% de descuento</option>
                     <option value={30}>30% de descuento</option>
+                    <option value={100}>100% de descuento</option>
                   </select>
                 </label>
 
