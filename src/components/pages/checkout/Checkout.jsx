@@ -405,6 +405,12 @@ const Checkout = () => {
           </button>
           <button
             className="btn btn-secondary mx-2"
+            onClick={() => setSelectedPaymentMethod("OpenPay BBVA")}
+          >
+            Filtrar por OpenPay BBVA
+          </button>
+          <button
+            className="btn btn-secondary mx-2"
             onClick={() => setSelectedPaymentMethod("")} // Limpiar el filtro
           >
             Limpiar Filtro
