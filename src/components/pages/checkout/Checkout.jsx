@@ -268,6 +268,7 @@ const Checkout = () => {
                     <option value="Galicia QR">Galicia QR</option>
                     <option value="Cuenta DNI">Cuenta DNI</option>
                     <option value="Mercado Pago Yami">Mercado Pago Yami</option>
+                    <option value="OpenPay BBVA">OpenPay BBVA</option>
                   </select>
                 </label>
 
