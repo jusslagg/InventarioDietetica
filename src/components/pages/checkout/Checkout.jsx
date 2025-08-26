@@ -250,7 +250,7 @@ const Checkout = () => {
                     </option>
                     <option value="Yamila Gonzalez">Yamila Gonzalez</option>
                     <option value="Daniela Urbina">Daniela Urbina</option>
-                    <option value="Vanesa">Vanesa</option>
+                    <option value="Diego">Diego</option>
                     <option value="Otros">Otros</option>
                   </select>
                 </label>
