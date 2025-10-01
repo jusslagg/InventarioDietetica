@@ -1,5 +1,4 @@
-import React from "react";
-import ItemDetailCard from "../../common/itemDetailCard/ItemDetailCard";
+﻿import ItemDetailCard from "../../common/itemDetailCard/ItemDetailCard";
 
 const ItemDetail = ({ item, addOn, totalAdded }) => {
   return (

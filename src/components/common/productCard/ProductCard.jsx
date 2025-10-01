@@ -1,10 +1,9 @@
-import { Link } from "react-router-dom";
-import { useContext, useState } from "react";
+﻿import { Link } from "react-router-dom";
 import CounterContainer from "../counter/CounterContainer";
-import { CartContext } from "../../../context/CartContext";
+import useCartContext from "../../../hooks/useCartContext";
 
 const ProductCard = ({ id, title, price, stock, imageUrl, category }) => {
-  const { addToCart, getTotalQuantityById } = useContext(CartContext);
+  const { addToCart, getTotalQuantityById } = useCartContext();
   const totalAdded = getTotalQuantityById(id);
 
   const addOn = (quantity) => {
@@ -14,13 +13,6 @@ const ProductCard = ({ id, title, price, stock, imageUrl, category }) => {
 
   return (
     <div className="card card-side md:card card-compact bg-base-100 w-64 md:w-72 shadow-xl">
-      {/* <figure className="w-full flex justify-center items-center">
-        <img
-          src={imageUrl}
-          alt={title}
-          className="object-contain w-32 h-32 md:w-40 md:h-40"
-        />
-      </figure> */}
       <div className="card-body">
         <h2 className="card-title text-lg xl:text-xl">{title}</h2>
         <p className="font-bold xl:text-lg">${price} Pesos</p>

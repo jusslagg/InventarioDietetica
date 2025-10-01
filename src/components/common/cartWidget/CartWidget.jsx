@@ -1,9 +1,9 @@
-import { useContext } from "react";
-import { CartContext } from "../../../context/CartContext";
+﻿import useCartContext from "../../../hooks/useCartContext";
 
 const CartWidget = () => {
-  const { getTotalQuantity } = useContext(CartContext);
-  let totalQuantity = getTotalQuantity();
+  const { getTotalQuantity } = useCartContext();
+  const totalQuantity = getTotalQuantity();
+
   return (
     <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
       <div className="indicator">

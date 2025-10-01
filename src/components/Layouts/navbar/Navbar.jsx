@@ -1,13 +1,13 @@
-import CartWidget from "../../common/cartWidget/CartWidget";
+﻿import CartWidget from "../../common/cartWidget/CartWidget";
 import ThemeController from "../../common/themeController/ThemeController";
 import { Link } from "react-router-dom";
 import { categories } from "./categories";
-import { LogoContext } from "../../../context/LogoContext";
-import { useContext, useState } from "react";
+import useLogoContext from "../../../hooks/useLogoContext";
+import { useState } from "react";
 
 const Navbar = () => {
-  const { currentLogo } = useContext(LogoContext);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Estado para controlar el menú desplegable
+  const { currentLogo } = useLogoContext();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -19,7 +19,6 @@ const Navbar = () => {
 
   return (
     <div className="navbar bg-base-100 shadow-md">
-      {/* Inicio del Navbar: Logo */}
       <div className="navbar-start flex items-center space-x-4">
         <Link to="/" className="flex flex-col items-center text-center">
           <img src={currentLogo} alt="logosphere" className="w-40" />
@@ -27,7 +26,6 @@ const Navbar = () => {
         </Link>
       </div>
 
-      {/* Centro del Navbar */}
       <div className="navbar-center relative">
         <button
           onClick={toggleDropdown}
@@ -42,7 +40,7 @@ const Navbar = () => {
                 <Link
                   to={path}
                   className="btn btn-ghost p-2 w-full text-center hover:bg-gray-300 transition"
-                  onClick={closeDropdown} // Cierra el desplegable al hacer clic
+                  onClick={closeDropdown}
                 >
                   {title}
                 </Link>
@@ -52,8 +50,10 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* Final del Navbar */}
       <div className="navbar-end flex items-center space-x-4">
+        <Link to="/finanzas" className="btn btn-outline btn-sm md:btn-md">
+          Control Financiero
+        </Link>
         <ThemeController />
         <Link to="/Cart">
           <CartWidget />

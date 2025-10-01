@@ -9,6 +9,7 @@ import { CartContextProvider } from "./context/CartContext";
 import { LogoContextProvider } from "./context/LogoContext";
 import { AlertProvider } from "./context/AlertContext";
 import Checkout from "./components/pages/checkout/Checkout";
+import FinancialDashboard from "./components/pages/financial/FinancialDashboard";
 
 function App() {
   return (
@@ -28,8 +29,9 @@ function App() {
                 element={<ItemDetailContainer />}
               />
               <Route path={"/Cart"} element={<CartContainer />} />
-              <Route path={"*"} element={<Page404 />} />
               <Route path={"/checkout"} element={<Checkout />} />
+              <Route path={"/finanzas"} element={<FinancialDashboard />} />
+              <Route path={"*"} element={<Page404 />} />
             </Routes>
             <Footer />
           </LogoContextProvider>

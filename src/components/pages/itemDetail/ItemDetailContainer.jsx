@@ -1,34 +1,31 @@
-import React, { useContext, useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import ItemDetail from "./ItemDetail";
 import { collection, doc, getDoc } from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { CartContext } from "../../../context/CartContext.jsx";
+import useCartContext from "../../../hooks/useCartContext";
 import { db } from "../../../configFirebase.js";
 
 const ItemDetailContainer = () => {
   const [item, setItem] = useState({});
-  const { addToCart, cart, getTotalQuantityById } = useContext(CartContext);
+    const { addToCart, getTotalQuantityById } = useCartContext();
 
-  const { id } = useParams(); // devuelve un objeto
+  const { id } = useParams();
 
-  let totalAdded = getTotalQuantityById(id);
+  const totalAdded = getTotalQuantityById(id);
 
   useEffect(() => {
-    let productCollection = collection(db, "products");
-    let refDoc = doc(productCollection, id);
-    let getProduct = getDoc(refDoc);
-    getProduct.then((res) => setItem({ ...res.data(), id: res.id }));
+    const productCollection = collection(db, "products");
+    const refDoc = doc(productCollection, id);
+
+    getDoc(refDoc).then((res) => setItem({ ...res.data(), id: res.id }));
   }, [id]);
 
   const addOn = (quantity) => {
-    let productoParaELCarrito = { ...item, quantity };
-    addToCart(productoParaELCarrito);
+    const productToAdd = { ...item, quantity };
+    addToCart(productToAdd);
   };
-  return (
-    <>
-      <ItemDetail item={item} addOn={addOn} totalAdded={totalAdded} />
-    </>
-  );
+
+  return <ItemDetail item={item} addOn={addOn} totalAdded={totalAdded} />;
 };
 
 export default ItemDetailContainer;

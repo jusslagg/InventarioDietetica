@@ -1,5 +1,4 @@
-import React from "react";
-import CounterContainer from "../counter/CounterContainer";
+﻿import CounterContainer from "../counter/CounterContainer";
 import { Link } from "react-router-dom";
 
 const ItemDetailCard = ({ item, addOn, totalAdded }) => {
@@ -31,7 +30,7 @@ const ItemDetailCard = ({ item, addOn, totalAdded }) => {
           <img
             src={item.imageUrl}
             alt={item.title}
-            className="rounded-lg h-80 lg:h-96  "
+            className="rounded-lg h-80 lg:h-96"
           />
         </figure>
         <div className="card-body">
@@ -59,4 +58,3 @@ const ItemDetailCard = ({ item, addOn, totalAdded }) => {
 };
 
 export default ItemDetailCard;
-//absolute right-px

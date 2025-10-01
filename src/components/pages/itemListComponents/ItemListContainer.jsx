@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { ItemList } from "./ItemList";
 import { useParams } from "react-router-dom";
 import {
@@ -16,13 +16,14 @@ import Swal from "sweetalert2"; // Importar SweetAlert
 const ItemListContainer = () => {
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [selectedItemId, setSelectedItemId] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newImageUrl, setNewImageUrl] = useState(""); // Estado para la nueva imagen
-  const [stockOriginal, setStockOriginal] = useState(0);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -63,29 +64,29 @@ const ItemListContainer = () => {
   const agregarProducto = async (e) => {
     e.preventDefault();
 
-    // Verificación de si ya existe el producto
+    // VerificaciÃ³n de si ya existe el producto
     if (items.some((item) => item.title === newTitle)) {
       alert("Este producto ya existe en la base de datos.");
       return;
     }
 
-    // Solicitar contraseña antes de agregar
+    // Solicitar contraseÃ±a antes de agregar
     const { value: password } = await Swal.fire({
-      title: "Ingrese la contraseña",
+      title: "Ingrese la contraseÃ±a",
       input: "password",
-      inputPlaceholder: "Contraseña",
+      inputPlaceholder: "ContraseÃ±a",
       showCancelButton: true,
       cancelButtonText: "Cancelar",
       confirmButtonText: "Aceptar",
       inputValidator: (value) => {
         if (value !== "camicam1") {
-          return "Contraseña incorrecta";
+          return "ContraseÃ±a incorrecta";
         }
       },
     });
 
     if (password !== "camicam1") {
-      return; // Si la contraseña es incorrecta, no continuar
+      return; // Si la contraseÃ±a es incorrecta, no continuar
     }
 
     try {
@@ -135,23 +136,23 @@ const ItemListContainer = () => {
 
     const updatedData = {};
 
-    // Solicitar contraseña antes de editar
+    // Solicitar contraseÃ±a antes de editar
     const { value: password } = await Swal.fire({
-      title: "Ingrese la contraseña",
+      title: "Ingrese la contraseÃ±a",
       input: "password",
-      inputPlaceholder: "Contraseña",
+      inputPlaceholder: "ContraseÃ±a",
       showCancelButton: true,
       cancelButtonText: "Cancelar",
       confirmButtonText: "Aceptar",
       inputValidator: (value) => {
         if (value !== "camicam1") {
-          return "Contraseña incorrecta";
+          return "ContraseÃ±a incorrecta";
         }
       },
     });
 
     if (password !== "camicam1") {
-      return; // Si la contraseña es incorrecta, no continuar
+      return; // Si la contraseÃ±a es incorrecta, no continuar
     }
 
     // Actualizar stock (permite reducir el stock)
@@ -207,7 +208,6 @@ const ItemListContainer = () => {
       setNewStock(selectedProduct.stock);
       setNewCategory(selectedProduct.category);
       setNewPrice(selectedProduct.price);
-      setStockOriginal(selectedProduct.stock);
     }
   };
 
@@ -240,7 +240,7 @@ const ItemListContainer = () => {
             <form onSubmit={agregarProducto}>
               <div className="mb-4">
                 <label htmlFor="title" className="block font-medium">
-                  Título:
+                  TÃ­tulo:
                 </label>
                 <input
                   type="text"
@@ -266,7 +266,7 @@ const ItemListContainer = () => {
 
               <div className="mb-4">
                 <label htmlFor="category" className="block font-medium">
-                  Categoría:
+                  CategorÃ­a:
                 </label>
                 <input
                   type="text"
@@ -329,7 +329,7 @@ const ItemListContainer = () => {
           <form onSubmit={editarProducto}>
             <div className="mb-4">
               <label htmlFor="title" className="block font-medium">
-                Nuevo Título:
+                Nuevo TÃ­tulo:
               </label>
               <input
                 type="text"

@@ -1,21 +1,12 @@
-const Counter = ({
+﻿const Counter = ({
   contador,
   sumar,
   restar,
   addOn,
   disabledSumar,
   disabledRestar,
-  calculatePrice,
-  productType, // Tipo de producto (condimento, fruto seco, harina, etc.)
-  pricePerKg, // Precio por kilogramo
-  handleChangeCantidad, // Función para manejar el cambio manual en la cantidad
+  handleChangeCantidad,
 }) => {
-  // Función para calcular el precio en base a la cantidad
-  const calculatePricePerUnit = (contador) => {
-    const pricePerGram = pricePerKg / 1000; // Precio por gramo
-    return pricePerGram * contador; // Calculamos el precio según la cantidad
-  };
-
   return (
     <div className="flex flex-row items-center">
       <button
@@ -45,7 +36,7 @@ const Counter = ({
       <div>
         <button
           className="btn btn-primary ml-2 px-8"
-          onClick={() => addOn(contador)} // Pasar solo la cantidad al agregar al carrito
+          onClick={() => addOn(contador)}
         >
           Agregar al carrito
         </button>
