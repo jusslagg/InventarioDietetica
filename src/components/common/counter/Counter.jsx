@@ -1,11 +1,14 @@
 ﻿const Counter = ({
   contador,
+  inputValue,
   sumar,
   restar,
   addOn,
   disabledSumar,
   disabledRestar,
   handleChangeCantidad,
+  handleBlur,
+  stock,
 }) => {
   return (
     <div className="flex flex-row items-center">
@@ -19,10 +22,14 @@
 
       <input
         type="number"
-        value={contador}
+        value={inputValue} // usamos inputValue, no contador directo
         onChange={(e) => handleChangeCantidad(e.target.value)}
+        onBlur={handleBlur}
         className="text-xl text-center px-3 w-16"
-        min="1"
+        min={0}
+        max={stock}
+        inputMode="numeric"
+        onWheel={(e) => e.currentTarget.blur()} 
       />
 
       <button
