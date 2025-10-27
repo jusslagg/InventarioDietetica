@@ -16,7 +16,7 @@ const daysOfWeek = [
   { key: "wednesday", label: "Miércoles", salaryFactor: 1, goalFactor: 1 },
   { key: "thursday", label: "Jueves", salaryFactor: 1, goalFactor: 1 },
   { key: "friday", label: "Viernes", salaryFactor: 1, goalFactor: 1 },
-  { key: "saturday", label: "Sábado", salaryFactor: 0.5, goalFactor: 1 },
+  { key: "saturday", label: "Sábado", salaryFactor: 0.5, goalFactor: 0.5 },
   { key: "sunday", label: "Domingo", salaryFactor: 0, goalFactor: 0 },
 ];
 const tabs = [
