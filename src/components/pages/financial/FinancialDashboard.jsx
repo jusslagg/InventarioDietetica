@@ -11,13 +11,13 @@ import {
 import { db } from "../../../configFirebase";
 import { LuCalendarClock, LuDownload, LuHistory, LuRefreshCw, LuUpload } from "react-icons/lu";
 const daysOfWeek = [
-  { key: "monday", label: "Lunes" },
-  { key: "tuesday", label: "Martes" },
-  { key: "wednesday", label: "Miércoles" },
-  { key: "thursday", label: "Jueves" },
-  { key: "friday", label: "Viernes" },
-  { key: "saturday", label: "Sábado" },
-  { key: "sunday", label: "Domingo" },
+  { key: "monday", label: "Lunes", salaryFactor: 1, goalFactor: 1 },
+  { key: "tuesday", label: "Martes", salaryFactor: 1, goalFactor: 1 },
+  { key: "wednesday", label: "Miércoles", salaryFactor: 1, goalFactor: 1 },
+  { key: "thursday", label: "Jueves", salaryFactor: 1, goalFactor: 1 },
+  { key: "friday", label: "Viernes", salaryFactor: 1, goalFactor: 1 },
+  { key: "saturday", label: "Sábado", salaryFactor: 0.5, goalFactor: 1 },
+  { key: "sunday", label: "Domingo", salaryFactor: 0, goalFactor: 0 },
 ];
 const tabs = [
   ...daysOfWeek,
@@ -43,9 +43,29 @@ const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
 const createEmptyManualWeek = () => {
   const manual = {};
   daysOfWeek.forEach(({ key }) => {
-    manual[key] = { income: 0, expense: 0 };
+    manual[key] = { income: 0, expense: 0, expenses: [] };
   });
   return manual;
+};
+const normalizeManualDay = (value) => {
+  if (!value) {
+    return { income: 0, expense: 0, expenses: [] };
+  }
+  const expenses = Array.isArray(value.expenses)
+    ? value.expenses.map((item) => ({
+        note: item?.note?.toString() ?? "",
+        amount: Number(item?.amount) || 0,
+      }))
+    : [];
+  const expenseTotal =
+    expenses.length > 0
+      ? expenses.reduce((acc, item) => acc + (Number(item.amount) || 0), 0)
+      : Number(value.expense) || 0;
+  return {
+    income: Number(value.income) || 0,
+    expense: expenseTotal,
+    expenses,
+  };
 };
 const normalizeDate = (date) => {
   const normalized = new Date(date);
@@ -117,6 +137,7 @@ const FinancialDashboard = () => {
     return stored ?? toDateKey(getWeekStart(new Date()));
   });
   const [activeTab, setActiveTab] = useState(daysOfWeek[0].key);
+  const [expenseDrafts, setExpenseDrafts] = useState({});
   const fileInputRef = useRef(null);
   const persist = (key, value) => {
     if (!isBrowser) return;
@@ -234,25 +255,42 @@ const FinancialDashboard = () => {
   const daySummaries = useMemo(() => {
     const manualWeek = manualData[activeWeekStart] ?? createEmptyManualWeek();
     return daysOfWeek.map((day) => {
+      const salaryFactor = day.salaryFactor ?? 1;
+      const goalFactor = day.goalFactor ?? 1;
       const dayOrders = weekData?.days?.[day.key] ?? { totalSales: 0, orders: [] };
-      const manualValues = manualWeek[day.key] ?? { income: 0, expense: 0 };
+      const manualValues = normalizeManualDay(manualWeek[day.key]);
+      const expenseItems = Array.isArray(manualValues.expenses)
+        ? manualValues.expenses
+        : [];
+      const expenseFromItems = expenseItems.reduce(
+        (acc, item) => acc + (Number(item.amount) || 0),
+        0
+      );
       const sales = dayOrders.totalSales;
       const manualIncome = Number(manualValues.income) || 0;
-      const manualExpense = Number(manualValues.expense) || 0;
+      const manualExpense =
+        expenseItems.length > 0 ? expenseFromItems : Number(manualValues.expense) || 0;
       const totalIncome = sales + manualIncome;
-      const net = totalIncome - manualExpense - dailySalary;
+      const salaryAmount = dailySalary * salaryFactor;
+      const goalTarget = dailyGoal * goalFactor;
+      const net = totalIncome - manualExpense - salaryAmount;
       return {
         key: day.key,
         label: day.label,
+        salaryFactor,
+        goalFactor,
+        salaryAmount,
         sales,
         manualIncome,
         manualExpense,
         totalIncome,
         net,
         orders: dayOrders.orders,
+        expenses: expenseItems,
+        goalTarget,
       };
     });
-  }, [weekData, manualData, activeWeekStart, dailySalary]);
+  }, [weekData, manualData, activeWeekStart, dailySalary, dailyGoal]);
   const weeklyTotals = useMemo(() => {
     const totals = daySummaries.reduce(
       (acc, day) => {
@@ -261,24 +299,35 @@ const FinancialDashboard = () => {
         acc.manualExpense += day.manualExpense;
         acc.totalIncome += day.totalIncome;
         acc.net += day.net;
+        acc.salary += day.salaryAmount;
+        acc.goal += day.goalTarget;
         return acc;
       },
-      { sales: 0, manualIncome: 0, manualExpense: 0, totalIncome: 0, net: 0 }
+      {
+        sales: 0,
+        manualIncome: 0,
+        manualExpense: 0,
+        totalIncome: 0,
+        net: 0,
+        salary: 0,
+        goal: 0,
+      }
     );
-    const totalSalary = dailySalary * daysOfWeek.length;
-    const weeklyGoal = dailyGoal * daysOfWeek.length;
+    const totalSalary = totals.salary;
+    const weeklyGoal = totals.goal;
     const ownerNet = totals.totalIncome - totals.manualExpense - totalSalary;
     const goalDiff = totals.totalIncome - weeklyGoal;
     const completion = weeklyGoal > 0 ? (totals.totalIncome / weeklyGoal) * 100 : 0;
+    const { salary, goal, ...rest } = totals;
     return {
-      ...totals,
+      ...rest,
       totalSalary,
       weeklyGoal,
       ownerNet,
       goalDiff,
       completion,
     };
-  }, [daySummaries, dailySalary, dailyGoal]);
+  }, [daySummaries]);
   const monthSummary = useMemo(() => {
     const currentMonthKey = monthKey(activeWeekStartDate);
     const aggregate = {
@@ -320,8 +369,79 @@ const FinancialDashboard = () => {
     setManualData((prev) => {
       const next = { ...prev };
       const week = { ...(next[activeWeekStart] ?? createEmptyManualWeek()) };
-      const day = { ...(week[dayKey] ?? { income: 0, expense: 0 }) };
-      day[field] = Number.isFinite(numeric) ? numeric : 0;
+      const day = normalizeManualDay(week[dayKey]);
+      if (field === "income") {
+        day.income = Number.isFinite(numeric) ? numeric : 0;
+      } else if (field === "expense") {
+        const expenseValue = Number.isFinite(numeric) ? numeric : 0;
+        day.expense = expenseValue;
+        day.expenses = [];
+      }
+      week[dayKey] = day;
+      next[activeWeekStart] = week;
+      return next;
+    });
+  };
+  const handleExpenseDraftChange = (dayKey, field, value) => {
+    setExpenseDrafts((prev) => {
+      const draft = prev[dayKey] ?? { amount: "", note: "" };
+      return {
+        ...prev,
+        [dayKey]: { ...draft, [field]: value },
+      };
+    });
+  };
+  const handleAddExpense = (dayKey) => {
+    const draft = expenseDrafts[dayKey] ?? { amount: "", note: "" };
+    const amount = Number(draft.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      window.alert("Ingresá un monto válido para el gasto.");
+      return;
+    }
+    const note = draft.note?.toString().trim() ?? "";
+    setManualData((prev) => {
+      const next = { ...prev };
+      const week = { ...(next[activeWeekStart] ?? createEmptyManualWeek()) };
+      const day = normalizeManualDay(week[dayKey]);
+      const expenses = Array.isArray(day.expenses) ? [...day.expenses] : [];
+      if (expenses.length === 0 && day.expense > 0) {
+        expenses.push({
+          amount: Number(day.expense) || 0,
+          note: "Total previo sin detalle",
+        });
+      }
+      expenses.push({ amount, note });
+      const totalExpense = expenses.reduce(
+        (sum, item) => sum + (Number(item.amount) || 0),
+        0
+      );
+      day.expenses = expenses;
+      day.expense = totalExpense;
+      week[dayKey] = day;
+      next[activeWeekStart] = week;
+      return next;
+    });
+    setExpenseDrafts((prev) => ({
+      ...prev,
+      [dayKey]: { amount: "", note: "" },
+    }));
+  };
+  const handleRemoveExpense = (dayKey, index) => {
+    setManualData((prev) => {
+      const next = { ...prev };
+      const week = { ...(next[activeWeekStart] ?? createEmptyManualWeek()) };
+      const day = normalizeManualDay(week[dayKey]);
+      const expenses = Array.isArray(day.expenses) ? [...day.expenses] : [];
+      if (index < 0 || index >= expenses.length) {
+        return prev;
+      }
+      expenses.splice(index, 1);
+      const totalExpense = expenses.reduce(
+        (sum, item) => sum + (Number(item.amount) || 0),
+        0
+      );
+      day.expenses = expenses;
+      day.expense = totalExpense;
       week[dayKey] = day;
       next[activeWeekStart] = week;
       return next;
@@ -405,7 +525,12 @@ const FinancialDashboard = () => {
     const day = daySummaries.find((entry) => entry.key === dayKey);
     if (!day) return null;
     const manualWeek = manualData[activeWeekStart] ?? createEmptyManualWeek();
-    const manualValues = manualWeek[dayKey] ?? { income: 0, expense: 0 };
+    const manualValues = normalizeManualDay(manualWeek[dayKey]);
+    const expenseDraft = expenseDrafts[dayKey] ?? { amount: "", note: "" };
+    const expenseItems = Array.isArray(manualValues.expenses)
+      ? manualValues.expenses
+      : [];
+    const hasLegacyExpense = expenseItems.length === 0 && manualValues.expense > 0;
     return (
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card bg-base-100 shadow-md p-6 space-y-4">
@@ -425,28 +550,83 @@ const FinancialDashboard = () => {
               }
             />
           </label>
-          <label className="form-control">
-            <span className="label-text">Gastos del día</span>
-            <input
-              type="number"
-              min="0"
-              className="input input-bordered"
-              value={manualValues.expense}
-              onChange={(event) =>
-                handleManualChange(dayKey, "expense", event.target.value)
-              }
-            />
-          </label>
+          <div className="form-control space-y-2">
+            <span className="label-text">Registrar gasto</span>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="number"
+                min="0"
+                placeholder="Monto"
+                className="input input-bordered w-full sm:max-w-[140px]"
+                value={expenseDraft.amount ?? ""}
+                onChange={(event) =>
+                  handleExpenseDraftChange(dayKey, "amount", event.target.value)
+                }
+              />
+              <input
+                type="text"
+                placeholder="Descripci�n"
+                className="input input-bordered flex-1"
+                value={expenseDraft.note ?? ""}
+                onChange={(event) =>
+                  handleExpenseDraftChange(dayKey, "note", event.target.value)
+                }
+              />
+              <button
+                type="button"
+                className="btn btn-primary sm:w-auto"
+                onClick={() => handleAddExpense(dayKey)}
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">Gastos registrados</p>
+            {expenseItems.length > 0 ? (
+              <ul className="space-y-2">
+                {expenseItems.map((item, index) => (
+                  <li
+                    key={`${dayKey}-expense-${index}`}
+                    className="flex items-start justify-between gap-3 rounded-lg border border-base-200 p-3"
+                  >
+                    <div>
+                      <p className="font-semibold">{formatCurrency(item.amount)}</p>
+                      {item.note && (
+                        <p className="text-xs text-base-content/70">{item.note}</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-ghost text-error"
+                      onClick={() => handleRemoveExpense(dayKey, index)}
+                    >
+                      Eliminar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : hasLegacyExpense ? (
+              <p className="text-sm text-base-content/70">
+                Total registrado sin detalle: {formatCurrency(manualValues.expense)}
+              </p>
+            ) : (
+              <p className="text-sm text-base-content/60">
+                Todav�a no registraste gastos manuales.
+              </p>
+            )}
+          </div>
         </div>
         <div className="card bg-base-100 shadow-md p-6 space-y-2">
           <h3 className="text-xl font-semibold">Resumen</h3>
           <p>Ventas (checkout): {formatCurrency(day.sales)}</p>
           <p>Ingresos manuales: {formatCurrency(day.manualIncome)}</p>
           <p>Gastos: {formatCurrency(day.manualExpense)}</p>
-          <p>Sueldo empleado: {formatCurrency(dailySalary)}</p>
+          <p>Sueldo aplicado: {formatCurrency(day.salaryAmount)}</p>
+          <p>Objetivo del d�a: {formatCurrency(day.goalTarget)}</p>
           <p className="font-semibold">Ganancia neta: {formatCurrency(day.net)}</p>
           <p className="text-sm text-base-content/70">
-            Diferencia vs objetivo diario: {formatCurrency(day.totalIncome - dailyGoal)}
+            Diferencia vs objetivo diario: {formatCurrency(day.totalIncome - day.goalTarget)}
           </p>
         </div>
         <div className="card bg-base-100 shadow-md lg:col-span-2">
@@ -529,7 +709,7 @@ const FinancialDashboard = () => {
         <div className="stat bg-info/10 rounded-lg">
           <div className="stat-title">Sueldos</div>
           <div className="stat-value text-info">
-            {formatCurrency(dailySalary * daysOfWeek.length)}
+            {formatCurrency(weeklyTotals.totalSalary)}
           </div>
         </div>
         <div className="stat bg-primary/10 rounded-lg">
@@ -594,12 +774,12 @@ const FinancialDashboard = () => {
               </thead>
               <tbody>
                 {daySummaries.map((day) => {
-                  const diff = day.totalIncome - dailyGoal;
+                  const diff = day.totalIncome - day.goalTarget;
                   return (
                     <tr key={day.key}>
                       <td>{day.label}</td>
                       <td>{formatCurrency(day.totalIncome)}</td>
-                      <td>{formatCurrency(dailyGoal)}</td>
+                      <td>{formatCurrency(day.goalTarget)}</td>
                       <td>{formatCurrency(diff)}</td>
                       <td className={diff >= 0 ? "text-success" : "text-error"}>
                         {diff >= 0 ? "Sobre el objetivo" : "Bajo el objetivo"}
